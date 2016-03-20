@@ -18,7 +18,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
         String websocketStatusMessage = "H" + String(myHue) + ",S" + String(mySaturation) + ",V" + String(myValue); //Sends a string with the HSV values to the client website when the conection gets established
         webSocket.sendTXT(num, websocketStatusMessage);
         
-        webSocket.sendTXT(num, ESP.getResetInfo()); //Handy for debugging
+        String info = ESP.getResetInfo();
+        webSocket.sendTXT(num, info); //Handy for debugging
             }
             break;
         case WStype_TEXT:
