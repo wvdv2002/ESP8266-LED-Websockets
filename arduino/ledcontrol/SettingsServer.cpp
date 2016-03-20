@@ -3,7 +3,7 @@
 
 
 #include "SettingsServer.h"
-#include <ESP8266httpUpdate.h>
+//#include <ESP8266httpUpdate.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <FS.h>
 
@@ -148,6 +148,7 @@ void startSettingsServer(void){
   ArduinoOTA.setHostname(pvhostname);
   ArduinoOTA.onError([](ota_error_t error) { ESP.restart(); });
   ArduinoOTA.begin();
+  
   server.on("/refresh", handle_refresh);
   server.on("/wifisetup",handle_wifisetup);
   server.on("/reboot", handle_reboot);
@@ -160,14 +161,18 @@ void startSettingsServer(void){
     if(!handleFileRead(server.uri()))
       server.send(404, "text/plain", "FileNotFound");
   });
+    httpUpdater.setup(&server); //setup update via webpage
 
   server.begin();
   Serial.println("HTTP server started");
-  
-  if(!mdns.begin(pvhostname, WiFi.localIP())) {
-    Serial.println("Error setting up MDNS responder!");
-  }
-  Serial.println("mDNS responder started");
+  //ArduinoOTA handles mdns service
+ // if(!mdns.begin(pvhostname, WiFi.localIP())) {
+ //   Serial.println("Error setting up MDNS responder!");
+ // }
+ // Serial.println("mDNS responder started");
+
+ //   mdns.addService("http", "tcp", 80);
+
 } 
 
 void settingsServerTask(void){
