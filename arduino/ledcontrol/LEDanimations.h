@@ -29,14 +29,14 @@ void one_color_allHSV(int ahue, int abright) {                // SET ALL LEDS TO
 }
 
 void ripple() {
-  static int last_time = millis();
+  static unsigned int last_time = millis();
   if ((millis() - last_time) > 300) //if the amount of milliseconds difference is too large, reset the difference.
   {
-    last_time = millis() + (50 + 1);
+    last_time = millis() + (100 + 1);
   }
-  if ((millis() - last_time) > 50)
+  if ((millis() - last_time) > 100)
   {
-    last_time += 50;
+    last_time += 100;
 
 
     if (currentBg == nextBg) {
@@ -100,7 +100,7 @@ void Fire2012()
 {
   // Array of temperature readings at each simulation cell
   static byte heat[NUM_LEDS];
-  static int last_time = millis();
+  static unsigned int last_time = millis();
   if ((millis() - last_time) > 300) //if the amount of milliseconds difference is too large, reset the difference.
   {
     last_time = millis() + (1000 / FRAMES_PER_SECOND + 1);
@@ -153,8 +153,8 @@ void fadeall() {
 void cylon() {
   static uint8_t hue = 0;
   static int i = 0;
-  static int cylon_state = 2;
-  static int last_time = millis();
+  static byte cylon_state = 2;
+  static unsigned int last_time = millis();
   //Serial.print("x");
   // First slide the led in one direction
   if ((millis() - last_time) > 200) //if the amount of milliseconds difference is too large, reset the difference.
