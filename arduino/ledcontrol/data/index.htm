@@ -11,19 +11,19 @@ It currently doesn't look very nice but it works... -->
                <meta name="viewport" content="width=device-width, initial-scale=1" />
                <meta name="apple-mobile-web-app-capable" content="yes">
 
-        <script src="lib/jquery-1.6.4.js"></script> 
+        <script src="lib/jquery-1.6.4.min.js"></script> 
 
 <script>
     $(document).bind('mobileinit',function(){
         $.mobile.changePage.defaults.changeHash = false;
         $.mobile.hashListeningEnabled = false;
-        $.mobile.pushStateEnabled = false;
+        $.mobile.pushStateEnabled = false; 
     });
 </script> 	        
-        <script src="lib/jquery.mobile-1.1.0.js"></script>
-        <link href="src/css/jquery.mobile.structure-1.1.0.css" rel="stylesheet"
+        <script src="lib/jquery.m-110.min.js"></script>
+        <link href="src/css/jqueryms110.min.css" rel="stylesheet"
         />
-        <link href="src/css/jquery.mobile.theme-1.1.0.css" rel="stylesheet" />
+        <link href="src/css/jquerymt110.min.css" rel="stylesheet" />
 
 <script>
 var ipValue;
@@ -75,7 +75,9 @@ function ledSaturation(newValue) {
 function ledValue(newValue) {
 	connection.send("d"+newValue); 
 };
-
+function whiteLedValue(newValue) {
+	connection.send("e"+newValue); 
+};
 
 				
 </script>
@@ -89,7 +91,7 @@ function ledValue(newValue) {
             <div data-role="content">
                 <div data-role="fieldcontain">
                     <label for="text1">WebSocket IP</label>
-                    <input type="text" id="ip" value="ws://192.168.1.5:81/" onblur='mod()' />
+                    <input type="text" id="ip" value="ws://192.168.178.18:81/" onblur='mod()' />
                 </div>
 					 <script>mod()</script>
                 <div class="ui-grid-b">
@@ -129,6 +131,11 @@ function ledValue(newValue) {
                     <input type="range" id="slider3-range" value="168" min="0" max="255" step="1" onchange="ledValue(this.value)"
                     data-highlight="true" />
                 </div>
+                 <div data-role="fieldcontain" id="slider4">
+                    <label for="slider4-range">Value</label>
+                    <input type="range" id="slider4-range" value="168" min="0" max="1023" step="1" onchange="whiteLedValue(this.value)"
+                    data-highlight="true" />
+                </div>
                 <div data-role="fieldcontain">
                     <label for="text1">ESP Restart Reason:</label>
                     <input type="text" id="msgESP" value=""/>
@@ -136,7 +143,10 @@ function ledValue(newValue) {
                 </div>		
             </div>
         </div>
-        <script>connection.onmessage = function(evt) {
+        <script>
+        var urltext = "ws://" + window.location.hostname + "/:81";
+        document.getElementById('ip').value = urltext ;
+        connection.onmessage = function(evt) {
         	if (evt.data.substring(0,1)=="H") {
         		document.getElementById('slider1-range').value=evt.data.substring(evt.data.indexOf("H")+1,evt.data.indexOf(",")); 
         		document.getElementById('slider2-range').value=evt.data.substring(evt.data.indexOf("S")+1,evt.data.lastIndexOf(","));
@@ -144,7 +154,8 @@ function ledValue(newValue) {
         		$(document.getElementById('slider1-range')).slider( "refresh" );
         		$(document.getElementById('slider2-range')).slider( "refresh" );
         		$(document.getElementById('slider3-range')).slider( "refresh" );
-        	} else {
+        		$(document.getElementById('slider4-range')).slider( "refresh" );
+				} else {
         		document.getElementById('msgESP').value=evt.data;
         	}
         

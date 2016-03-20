@@ -7,23 +7,24 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
 
     switch(type) {
         case WStype_DISCONNECTED:
-            //USE_SERIAL.printf("[%u] Disconnected!\n", num);
+            USE_SERIAL.printf("[%u] Disconnected!\n", num);
             break;
         case WStype_CONNECTED:
             {
                 IPAddress ip = webSocket.remoteIP(num);
-                //USE_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+                USE_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
         
         // send message to client
         String websocketStatusMessage = "H" + String(myHue) + ",S" + String(mySaturation) + ",V" + String(myValue); //Sends a string with the HSV values to the client website when the conection gets established
         webSocket.sendTXT(num, websocketStatusMessage);
         
-        webSocket.sendTXT(num, ESP.getResetInfo()); //Handy for debugging
-            }
+        String info = ESP.getResetInfo();
+        webSocket.sendTXT(num, info);           
+        }
             break;
         case WStype_TEXT:
             {
-              //USE_SERIAL.printf("[%u] get Text: %s\n", num, payload);
+              USE_SERIAL.printf("[%u] get Text: %s\n", num, payload);
             
 
             // send message to client
@@ -69,6 +70,14 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
                 if (myValue != xVal.toInt()) {
                 myValue = xVal.toInt();
                 EEPROM.write(3, myValue);
+                lastChangeTime = millis();
+                eepromCommitted = false;
+                }
+             }
+              if (text.startsWith("e")) {
+               String xVal = (text.substring(text.indexOf("e") + 1, text.length()));
+                if (myWhiteLedValue != xVal.toInt()) {
+                myWhiteLedValue = xVal.toInt();
                 lastChangeTime = millis();
                 eepromCommitted = false;
                 }
