@@ -73,17 +73,37 @@ void setup() {
 }
 
 
+void writeWhiteLedPWMIfChanged(int value)
+{
+  static int oldPWMValue = 9999;
+  if (oldPWMValue != value)
+  {
+    oldPWMValue = value;
+    analogWrite(0,value);
+  }
+}
+
+
 void loop() {
   webSocket.loop();                           // handles websockets
   settingsServerTask();
-  
+  if (myEffect!=5)
+  {
+    writeWhiteLedPWMIfChanged(myWhiteLedValue);  
+  }
+  else
+  {
+    writeWhiteLedPWMIfChanged(0);      
+  }
+
+
 switch (myEffect) {                           // switches between animations
     case 1: // Solid Color
       EVERY_N_MILLISECONDS( 20 ) {
         ledSet = CHSV(myHue, mySaturation, myValue);
         LEDS.show();
-        analogWrite(0,myWhiteLedValue);
       }
+
       break;
     case 2: // Ripple effect
       ripple();
@@ -97,7 +117,8 @@ switch (myEffect) {                           // switches between animations
     case 5: // Turn off all LEDs
       EVERY_N_MILLISECONDS( 20 ) {
       ledSet.fadeToBlackBy(2);
-      LEDS.show(); 
+      LEDS.show();
+      
       }
       break;
     case 6: // loop through hues with all leds the same color. Can easily be changed to display a classic rainbow loop
@@ -126,6 +147,9 @@ switch (myEffect) {                           // switches between animations
   // EEPROM-commit and websocket broadcast -- they get called once if there has been a change 1 second ago and no further change since. This happens for performance reasons.
   currentChangeTime = millis();
   if (currentChangeTime - lastChangeTime > 2000 && eepromCommitted == false) {
+     Serial.print("Heap free: ");  
+     Serial.println(system_get_free_heap_size());
+
     EEPROM.commit();
     eepromCommitted = true;
     String websocketStatusMessage = "H" + String(myHue) + ",S" + String(mySaturation) + ",V" + String(myValue);
