@@ -11,12 +11,14 @@
 // Wifi credentials
 const char* ssid = "your SSID";
 const char* password = "your password";
+const char* espname = "your ESP name";  //Shows in router and in OTA-menu
 
 
 // Defining LED strip
 #define NUM_LEDS 30                 //Number of LEDs in your strip
 #define DATA_PIN 12                 //Using WS2812B -- if you use APA102 or other 4-wire LEDs you need to also add a clock pin
 CRGB leds[NUM_LEDS];
+CRGBSet ledSet(leds, NUM_LEDS);    //Trying LEDSet from FastLED
 
 //Some Variables
 byte myEffect = 1;                  //what animation/effect should be displayed
@@ -32,7 +34,7 @@ int flickerLed;
 int flickerValue = 110 + random(-3, +3); //70 works nice, too
 int flickerHue = 33;
 
-bool eepromCommitted = false;
+bool eepromCommitted = true;      
 
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
@@ -56,11 +58,11 @@ void setup() {
   LEDS.showColor(CHSV(myHue, mySaturation, myValue));
 
 // Starting Wifi
+  WiFi.hostname(espname);
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {
     WiFi.begin(ssid, password);
-    delay(1000);
+    delay(500);
   }
 
 // All this below is for OTA-updates
@@ -68,7 +70,7 @@ void setup() {
   // ArduinoOTA.setPort(8266);
 
   // Hostname defaults to esp8266-[ChipID]
-  ArduinoOTA.setHostname("myESP");
+  ArduinoOTA.setHostname(espname);
 
   // No authentication by default
   // ArduinoOTA.setPassword((const char *)"123");
@@ -83,16 +85,14 @@ void setup() {
 
 void loop() {
   ArduinoOTA.handle();                        // handles OTA-updates
+  // yield();                                 // uncomment if you run into watchdog resets
   webSocket.loop();                           // handles websockets
+  // yield();                                 // uncomment if you run into watchdog resets
   
 switch (myEffect) {                           // switches between animations
     case 1: // Solid Color
-      currentTime = millis();
-      if (currentTime - previousTime > 20) {
-        for (int i = 0 ; i < NUM_LEDS; i++ ) {
-        leds[i] = CHSV(myHue, mySaturation, myValue);
-        }
-        previousTime = currentTime;
+      EVERY_N_MILLISECONDS( 20 ) {
+        ledSet = CHSV(myHue, mySaturation, myValue);
         LEDS.show();
       }
       break;
@@ -106,29 +106,20 @@ switch (myEffect) {                           // switches between animations
       Fire2012();
       break;
     case 5: // Turn off all LEDs
-      for (int i = 0 ; i < NUM_LEDS; i++ ) {
-        if( leds[i] ) {
-        LEDS.showColor(CHSV(0, 0, 0));
-        } 
-      }     
+      EVERY_N_MILLISECONDS( 20 ) {
+      ledSet.fadeToBlackBy(2);
+      LEDS.show(); 
+      }
       break;
     case 6: // loop through hues with all leds the same color. Can easily be changed to display a classic rainbow loop
-      currentTime = millis();
-      if (currentTime - previousTime > 250) {
-        rainbowHue = rainbowHue + 1;
-        for (int i = 0 ; i < NUM_LEDS; i++ ) {
-        leds[i] = CHSV(rainbowHue, mySaturation, myValue);
-        } 
-      previousTime = currentTime;
-      LEDS.show();
-      }
-      
+      EVERY_N_MILLISECONDS( 250 ) {
+      rainbowHue = rainbowHue + 1;
+      LEDS.showColor(CHSV(rainbowHue, mySaturation, myValue));
+     }
       break;
     case 7: // make a single, random LED act as a candle
       currentTime = millis();
-      for (int i = 0 ; i < NUM_LEDS; i++ ) {
-          leds[i].fadeToBlackBy(2);
-      } 
+      ledSet.fadeToBlackBy(1);
       leds[flickerLed] = CHSV(flickerHue, 255, flickerValue);
       flickerTime = random(150, 500);
       if (currentTime - previousTime > flickerTime) {
@@ -145,14 +136,12 @@ switch (myEffect) {                           // switches between animations
   
   // EEPROM-commit and websocket broadcast -- they get called once if there has been a change 1 second ago and no further change since. This happens for performance reasons.
   currentChangeTime = millis();
-  if (currentChangeTime - lastChangeTime > 1000) {
-    if (eepromCommitted == false) {
+  if (currentChangeTime - lastChangeTime > 1000 && eepromCommitted == false) {
     EEPROM.commit();
     eepromCommitted = true;
     String websocketStatusMessage = "H" + String(myHue) + ",S" + String(mySaturation) + ",V" + String(myValue);
-    webSocket.broadcastTXT(websocketStatusMessage); // Tell all connected clients which HSV values are running
-    //LEDS.showColor(CRGB(0, 255, 0));  //for debugging to see when an if-clause fires without having to use a serial monitor - a handy little flash of green light
+    webSocket.broadcastTXT(websocketStatusMessage);
+    //LEDS.showColor(CRGB(0, 255, 0));  //for debugging to see when if-clause fires
     //delay(50);                        //for debugging to see when if-clause fires
-    }
   }
 }
