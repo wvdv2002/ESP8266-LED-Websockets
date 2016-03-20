@@ -140,7 +140,7 @@ switch (myEffect) {                           // switches between animations
     EEPROM.commit();
     eepromCommitted = true;
     String websocketStatusMessage = "H" + String(myHue) + ",S" + String(mySaturation) + ",V" + String(myValue);
-    webSocket.broadcastTXT(websocketStatusMessage);
+    webSocket.broadcastTXT(websocketStatusMessage); // Tell all connected clients which HSV values are running
     //LEDS.showColor(CRGB(0, 255, 0));  //for debugging to see when if-clause fires
     //delay(50);                        //for debugging to see when if-clause fires
   }
