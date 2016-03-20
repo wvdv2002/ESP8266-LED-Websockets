@@ -29,14 +29,19 @@ void one_color_allHSV(int ahue, int abright) {                // SET ALL LEDS TO
 }
 
 void ripple() {
-  static unsigned int last_time = millis();
-  if ((millis() - last_time) > 300) //if the amount of milliseconds difference is too large, reset the difference.
+  static unsigned long rippleTick = millis();
+  if ((millis() - rippleTick) > 300) //if the amount of milliseconds difference is too large, reset the difference.
   {
-    last_time = millis() + (100 + 1);
+    rippleTick = millis() - (100 + 1);
+    
+              Serial.print("mi:");
+          Serial.print(millis());
+          Serial.print(" ");
+          Serial.println(rippleTick);
   }
-  if ((millis() - last_time) > 100)
+  if ((millis() - rippleTick) > 100)
   {
-    last_time += 100;
+    rippleTick += 100;
 
 
     if (currentBg == nextBg) {
@@ -100,14 +105,18 @@ void Fire2012()
 {
   // Array of temperature readings at each simulation cell
   static byte heat[NUM_LEDS];
-  static unsigned int last_time = millis();
-  if ((millis() - last_time) > 300) //if the amount of milliseconds difference is too large, reset the difference.
+  static unsigned long fireTick = millis();
+  if ((millis() - fireTick) > 300) //if the amount of milliseconds difference is too large, reset the difference.
   {
-    last_time = millis() + (1000 / FRAMES_PER_SECOND + 1);
+    fireTick = millis() + (1000 / FRAMES_PER_SECOND + 1);
+          Serial.print("mi:");
+          Serial.print(millis());
+          Serial.print(" ");
+          Serial.println(fireTick);
   }
-  if ((millis() - last_time) > (1000 / FRAMES_PER_SECOND))
+  if ((millis() - fireTick) > (1000 / FRAMES_PER_SECOND))
   {
-    last_time += (1000 / FRAMES_PER_SECOND);
+    fireTick += (1000 / FRAMES_PER_SECOND);
 
 
     // Step 1.  Cool down every cell a little
@@ -153,17 +162,21 @@ void fadeall() {
 void cylon() {
   static uint8_t hue = 0;
   static int i = 0;
-  static byte cylon_state = 2;
-  static unsigned int last_time = millis();
+  static int cylon_state = 2;
+  static unsigned long cylonTick = millis();
   //Serial.print("x");
   // First slide the led in one direction
-  if ((millis() - last_time) > 200) //if the amount of milliseconds difference is too large, reset the difference.
+  if ((millis() - cylonTick) > 200) //if the amount of milliseconds difference is too large, reset the difference.
   {
-    last_time = millis() - 30;
+    cylonTick = millis() - 30;
+              Serial.print("mi:");
+          Serial.print(millis());
+          Serial.print(" ");
+          Serial.println(cylonTick);
   }
-  if ((millis() - last_time) > 25)
+  if ((millis() - cylonTick) > 25)
   {
-    last_time += 25;
+    cylonTick += 25;
     switch (cylon_state) {
       case 0:
         if (i < NUM_LEDS) {
@@ -187,7 +200,7 @@ void cylon() {
         if (i > 0) {
           // Now go in the other direction.
           // Set the i'th led to red
-          leds[i - 1] = CHSV(hue++, 255, 255);
+          leds[(i--) - 1] = CHSV(hue++, 255, 255);
           // Show the leds
           FastLED.show();
           // now that we've shown the leds, reset the i'th led to black
@@ -202,7 +215,7 @@ void cylon() {
         break;
       default:
         cylon_state = 0;
-        last_time = millis();
+        cylonTick = millis();
         i = 0;
         break;
     }
