@@ -19,9 +19,9 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
         webSocket.sendTXT(num, websocketStatusMessage);
         
         String info = ESP.getResetInfo();
-        webSocket.sendTXT(num, info);           
-        }
-            break;
+        webSocket.sendTXT(num, info); //Handy for debugging
+			}
+        break;
         case WStype_TEXT:
             {
               USE_SERIAL.printf("[%u] get Text: %s\n", num, payload);
@@ -37,7 +37,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
 
              if (text.startsWith("a")) {
                String xVal = (text.substring(text.indexOf("a") + 1, text.length()));
-                flickerLed = random(0,29);
+                flickerLed = random(0,NUM_LEDS-1);
                 if (myEffect != xVal.toInt()) {  // only do stuff when there was a change
                 myEffect = xVal.toInt();
                 rainbowHue = myHue;
@@ -78,6 +78,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
                String xVal = (text.substring(text.indexOf("e") + 1, text.length()));
                 if (myWhiteLedValue != xVal.toInt()) {
                 myWhiteLedValue = xVal.toInt();
+                EEPROM.write(4, myWhiteLedValue&&255);
+                EEPROM.write(5, myWhiteLedValue/256);
                 lastChangeTime = millis();
                 eepromCommitted = false;
                 }
