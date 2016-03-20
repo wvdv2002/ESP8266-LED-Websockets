@@ -132,7 +132,7 @@ function whiteLedValue(newValue) {
                     data-highlight="true" />
                 </div>
                  <div data-role="fieldcontain" id="slider4">
-                    <label for="slider4-range">Value</label>
+                    <label for="slider4-range">WhiteLeds</label>
                     <input type="range" id="slider4-range" value="168" min="0" max="1023" step="1" onchange="whiteLedValue(this.value)"
                     data-highlight="true" />
                 </div>
@@ -148,10 +148,12 @@ function whiteLedValue(newValue) {
         document.getElementById('ip').value = urltext ;
         connection.onmessage = function(evt) {
         	if (evt.data.substring(0,1)=="H") {
-        		document.getElementById('slider1-range').value=evt.data.substring(evt.data.indexOf("H")+1,evt.data.indexOf(",")); 
-        		document.getElementById('slider2-range').value=evt.data.substring(evt.data.indexOf("S")+1,evt.data.lastIndexOf(","));
-        		document.getElementById('slider3-range').value=evt.data.substring(evt.data.indexOf("V")+1,evt.data.length);
-        		$(document.getElementById('slider1-range')).slider( "refresh" );
+        		document.getElementById('slider1-range').value=evt.data.substring(evt.data.indexOf("H")+1,evt.data.indexOf(",S")); 
+        		document.getElementById('slider2-range').value=evt.data.substring(evt.data.indexOf("S")+1,evt.data.indexOf(",V"));
+        		document.getElementById('slider3-range').value=evt.data.substring(evt.data.indexOf("V")+1,evt.data.indexOf(",W"));
+        		document.getElementById('slider4-range').value=evt.data.substring(evt.data.indexOf("W")+1,evt.data.length);
+        		
+				$(document.getElementById('slider1-range')).slider( "refresh" );
         		$(document.getElementById('slider2-range')).slider( "refresh" );
         		$(document.getElementById('slider3-range')).slider( "refresh" );
         		$(document.getElementById('slider4-range')).slider( "refresh" );
