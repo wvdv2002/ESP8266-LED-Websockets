@@ -37,7 +37,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
 
              if (text.startsWith("a")) {
                String xVal = (text.substring(text.indexOf("a") + 1, text.length()));
-                flickerLed = random(0,29);
+                flickerLed = random(0,NUM_LEDS-1);
                 if (myEffect != xVal.toInt()) {  // only do stuff when there was a change
                 myEffect = xVal.toInt();
                 rainbowHue = myHue;
