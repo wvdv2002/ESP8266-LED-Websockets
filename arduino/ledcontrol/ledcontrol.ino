@@ -47,7 +47,19 @@ unsigned long currentChangeTime = 0;
 #include "LEDanimations.h"
 #include "LEDWebsockets.h"
 
+void writeWhiteLedPWMIfChanged(int value)
+{
+  static int oldPWMValue = 9999;
+  if (oldPWMValue != value)
+  {
+    oldPWMValue = value;
+    analogWrite(0,value);
+  }
+}
+
+
 void setup() {
+  writeWhiteLedPWMIfChanged(0);  
   EEPROM.begin(6);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
   Serial.begin(115200);
   Serial.println("Ledtest example");
@@ -73,15 +85,6 @@ void setup() {
 }
 
 
-void writeWhiteLedPWMIfChanged(int value)
-{
-  static int oldPWMValue = 9999;
-  if (oldPWMValue != value)
-  {
-    oldPWMValue = value;
-    analogWrite(0,value);
-  }
-}
 
 
 void loop() {
@@ -152,7 +155,7 @@ switch (myEffect) {                           // switches between animations
 
     EEPROM.commit();
     eepromCommitted = true;
-    String websocketStatusMessage = "H" + String(myHue) + ",S" + String(mySaturation) + ",V" + String(myValue);
+    String websocketStatusMessage = "H" + String(myHue) + ",S" + String(mySaturation) + ",V" + String(myValue)+ ",W" + String(myWhiteLedValue);
     webSocket.broadcastTXT(websocketStatusMessage); // Tell all connected clients which HSV values are running
     //LEDS.showColor(CRGB(0, 255, 0));  //for debugging to see when if-clause fires
     //delay(50);                        //for debugging to see when if-clause fires
