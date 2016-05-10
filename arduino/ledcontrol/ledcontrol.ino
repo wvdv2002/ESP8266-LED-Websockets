@@ -29,7 +29,7 @@ byte myEffect = 1;                  //what animation/effect should be displayed
 byte myHue = 33;                    //I am using HSV, the initial settings display something like "warm white" color at the first start
 byte mySaturation = 168;
 byte myValue = 255;
-int myWhiteLedValue=512;
+unsigned int myWhiteLedValue=0;
 byte rainbowHue = myHue;            //Using this so the rainbow effect doesn't overwrite the hue set on the website
 
 int flickerTime = random(200, 400);

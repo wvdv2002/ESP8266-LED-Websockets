@@ -6,13 +6,14 @@
 //#include <ESP8266httpUpdate.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <FS.h>
+#include <ESP8266SSDP.h>
 
 #define DBG_OUTPUT_PORT Serial
 
 const char* pvhostname = "woodblock";
 
 ESP8266WebServer server(80);
-MDNSResponder mdns;
+//MDNSResponder mdns;
 ESP8266HTTPUpdateServer httpUpdater;
 
 void showWifiConfigAPMessage(void);
@@ -144,7 +145,7 @@ void startSettingsServer(void){
     }
     DBG_OUTPUT_PORT.printf("\n");
   }
- 
+
   ArduinoOTA.setHostname(pvhostname);
   ArduinoOTA.onError([](ota_error_t error) { ESP.restart(); });
   ArduinoOTA.begin();
@@ -155,6 +156,10 @@ void startSettingsServer(void){
   server.on("/brightness",handle_brightness);
    //list directory
   server.on("/list", HTTP_GET, handleFileList);
+  server.on("/description.xml", HTTP_GET, [](){ //SSDP server added
+      SSDP.schema(server.client());
+  });
+
  //called when the url is not defined here
   //use it to load content from SPIFFS
   server.onNotFound([](){
@@ -178,7 +183,6 @@ void startSettingsServer(void){
 void settingsServerTask(void){
   ArduinoOTA.handle();
   server.handleClient();
-  mdns.update();
 }
 
 void showWifiConfigAPMessage(WiFiManager *myWiFiManager)
@@ -189,6 +193,7 @@ void setupWiFi(void){
     // The extra parameters to be configured (can be either global or just in the setup)
   // After connecting, parameter.getValue() will get you the configured value
   // id/name placeholder/prompt default length
+  WiFi.hostname(pvhostname);
   WiFiManager wifiManager;
   wifiManager.setMinimumSignalQuality();
   wifiManager.setAPCallback(showWifiConfigAPMessage);

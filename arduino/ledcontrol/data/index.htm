@@ -91,9 +91,8 @@ function whiteLedValue(newValue) {
             <div data-role="content">
                 <div data-role="fieldcontain">
                     <label for="text1">WebSocket IP</label>
-                    <input type="text" id="ip" value="ws://192.168.178.18:81/" onblur='mod()' />
+                    <input type="text" id="ip" value="ws://192.168.178.19:81/" onblur='mod()' />
                 </div>
-					 <script>mod()</script>
                 <div class="ui-grid-b">
                     <div class="ui-block-a">
                         <a data-role="button" id="Solid Color" onclick="ledWhite()" data-inline="true">Solid</a>
@@ -144,8 +143,9 @@ function whiteLedValue(newValue) {
             </div>
         </div>
         <script>
-        var urltext = "ws://" + window.location.hostname + "/:81";
+        var urltext = "ws://" + window.location.hostname + ":81";
         document.getElementById('ip').value = urltext ;
+		mod();
         connection.onmessage = function(evt) {
         	if (evt.data.substring(0,1)=="H") {
         		document.getElementById('slider1-range').value=evt.data.substring(evt.data.indexOf("H")+1,evt.data.indexOf(",S")); 
