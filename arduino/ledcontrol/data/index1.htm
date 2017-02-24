@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<!-- Copied and adapted from Amir Avni's repository https://github.com/amiravni/ESP8266_12VLEDS_Websocket_OTA
+and his description http://www.whatimade.today/esp8266-on-websockets-mdns-ota-and-leds/ 
+
+It currently doesn't look very nice but it works... -->
+    
+    <head>
+        <title>LED Control</title>
+               <meta name="viewport" content="width=device-width, initial-scale=1" />
+               <meta name="apple-mobile-web-app-capable" content="yes">
+
+        <script src="lib/jquery-1.6.4.min.js"></script> 
+
+<script>
+    $(document).bind('mobileinit',function(){
+        $.mobile.changePage.defaults.changeHash = false;
+        $.mobile.hashListeningEnabled = false;
+        $.mobile.pushStateEnabled = false; 
+    });
+</script> 	        
+        <script src="lib/jquery.m-110.min.js"></script>
+        <link href="src/css/jqueryms110.min.css" rel="stylesheet"
+        />
+        <link href="src/css/jquerymt110.min.css" rel="stylesheet" />
+
+<script>
+var ipValue;
+var connection;
+
+function mod(){
+var text = document.getElementById('ip').value;
+ipValue = text;	
+connection = new WebSocket(ipValue, ['arduino']); 
+	
+console.log(text)
+console.log("IP value changed to:"+ipValue);
+}	
+
+function ledWhite() {
+	var toSend = "a1";
+	connection.send(toSend); 
+};
+function ledRipple() {
+	var toSend = "a2";
+	connection.send(toSend); 
+};
+function ledCylon() {
+	var toSend = "a3";
+	connection.send(toSend); 
+};
+function ledFire() {
+	var toSend = "a4";
+	connection.send(toSend); 
+};
+function ledOff() {
+	var toSend = "a5";
+	connection.send(toSend); 
+};
+function ledRainbow() {
+	var toSend = "a6";
+	connection.send(toSend); 
+};
+function ledCandle() {
+	var toSend = "a7";
+	connection.send(toSend); 
+};
+function ledHue(newValue) {
+	connection.send("b"+newValue); 
+};
+function ledSaturation(newValue) {
+	connection.send("c"+newValue); 
+};
+function ledValue(newValue) {
+	connection.send("d"+newValue); 
+};
+function whiteLedValue(newValue) {
+	connection.send("e"+newValue); 
+};
+
+				
+</script>
+      </head>  
+    <body>
+
+        <div data-role="page" id="page1">
+            <div data-role="header">
+                <h1>LED Control</h1>
+            </div>
+            <div data-role="content">
+                <div data-role="fieldcontain">
+                    <label for="text1">WebSocket IP</label>
+                    <input type="text" id="ip" value="ws://192.168.178.19:81/" onblur='mod()' />
+                </div>
+                <div class="ui-grid-b">
+                    <div class="ui-block-a">
+                        <a data-role="button" id="Solid Color" onclick="ledWhite()" data-inline="true">Solid</a>
+                    </div>
+                    <div class="ui-block-b">
+                        <a data-role="button" id="Ripple" onclick="ledRipple()" data-inline="true">Ripple</a>
+                    </div>
+                    <div class="ui-block-c">
+                        <a data-role="button" id="Cylon" onclick="ledCylon()" data-inline="true">Cylon</a>
+                    </div>
+                    <div class="ui-block-d">
+                        <a data-role="button" id="Fire" onclick="ledFire()" data-inline="true">Fire</a>
+                    </div>
+                     <div class="ui-block-e">
+                        <a data-role="button" id="Off" onclick="ledOff()" data-inline="true">Off</a>
+                    </div>
+                    <div class="ui-block-e">
+                        <a data-role="button" id="Rainbow" onclick="ledRainbow()" data-inline="true">Rainbow</a>
+                    </div>
+                     <div class="ui-block-e">
+                        <a data-role="button" id="Candle" onclick="ledCandle()" data-inline="true">Candle</a>
+                    </div>
+                     <div data-role="fieldcontain" id="slider1">
+                    <label for="slider1-range">Color (Hue)</label>
+                    <input type="range" id="slider1-range" value="13" min="0" max="255" step="1" onchange="ledHue(this.value)"
+                    data-highlight="true" />
+                </div>
+                  <div data-role="fieldcontain" id="slider2">
+                    <label for="slider2-range">Saturation</label>
+                    <input type="range" id="slider2-range" value="92" min="0" max="255" step="1" onchange="ledSaturation(this.value)"
+                    data-highlight="true" />
+                </div>
+                 <div data-role="fieldcontain" id="slider3">
+                    <label for="slider3-range">Value</label>
+                    <input type="range" id="slider3-range" value="168" min="0" max="255" step="1" onchange="ledValue(this.value)"
+                    data-highlight="true" />
+                </div>
+                 <div data-role="fieldcontain" id="slider4">
+                    <label for="slider4-range">WhiteLeds</label>
+                    <input type="range" id="slider4-range" value="168" min="0" max="1023" step="1" onchange="whiteLedValue(this.value)"
+                    data-highlight="true" />
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="text1">ESP Restart Reason:</label>
+                    <input type="text" id="msgESP" value=""/>
+                </div>
+                </div>		
+            </div>
+        </div>
+        <script>
+        var urltext = "ws://" + window.location.hostname + ":81";
+        document.getElementById('ip').value = urltext ;
+		mod();
+        connection.onmessage = function(evt) {
+        	if (evt.data.substring(0,1)=="H") {
+        		document.getElementById('slider1-range').value=evt.data.substring(evt.data.indexOf("H")+1,evt.data.indexOf(",S")); 
+        		document.getElementById('slider2-range').value=evt.data.substring(evt.data.indexOf("S")+1,evt.data.indexOf(",V"));
+        		document.getElementById('slider3-range').value=evt.data.substring(evt.data.indexOf("V")+1,evt.data.indexOf(",W"));
+        		document.getElementById('slider4-range').value=evt.data.substring(evt.data.indexOf("W")+1,evt.data.length);
+        		
+				$(document.getElementById('slider1-range')).slider( "refresh" );
+        		$(document.getElementById('slider2-range')).slider( "refresh" );
+        		$(document.getElementById('slider3-range')).slider( "refresh" );
+        		$(document.getElementById('slider4-range')).slider( "refresh" );
+				} else {
+        		document.getElementById('msgESP').value=evt.data;
+        	}
+        
+        };</script>
+    </body>
+
+</html>

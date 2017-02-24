@@ -1,11 +1,14 @@
 
 #include <ESP8266WiFi.h>
-#include <WiFiUdp.h>
+#include <ESP8266WiFiMulti.h>
 #include <FastLED.h>
 #include <Hash.h>
 #include <EEPROM.h>
 #include <WebSockets.h>
 #include <WebSocketsServer.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266mDNS.h>
+#include <Hash.h>
 #include "SettingsServer.h"
 
 
@@ -43,13 +46,17 @@ unsigned long currentTime = 0;
 unsigned long previousTime = 0;
 unsigned long lastChangeTime = 0;
 unsigned long currentChangeTime = 0;
+unsigned long startTimeSleepTimer = 0;
+unsigned long sleepTime = 0;
+bool inSleep = 0;
 
 #include "LEDanimations.h"
 #include "LEDWebsockets.h"
+int oldPWMValue = 9999;
 
 void writeWhiteLedPWMIfChanged(int value)
 {
-  static int oldPWMValue = 9999;
+
   if (oldPWMValue != value)
   {
     oldPWMValue = value;
@@ -59,7 +66,9 @@ void writeWhiteLedPWMIfChanged(int value)
 
 
 void setup() {
+  analogWriteFreq(200);
   writeWhiteLedPWMIfChanged(0);  
+  writeWhiteLedPWMIfChanged(1);  
   EEPROM.begin(6);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
   Serial.begin(115200);
   Serial.println("Ledtest example");
@@ -71,13 +80,15 @@ void setup() {
   myHue = EEPROM.read(1);
   mySaturation = EEPROM.read(2);
   myValue = EEPROM.read(3);
-  myWhiteLedValue = EEPROM.read(4);
-  myWhiteLedValue += EEPROM.read(5)*256;
-  
+//  myWhiteLedValue = EEPROM.read(4);
+//  myWhiteLedValue += EEPROM.read(5)*256;
+  LEDS.showColor(CHSV(0,255,255));
   delay(100);                                         //Delay needed, otherwise showcolor doesn't light up all leds or they produce errors after turning on the power supply - you will need to experiment
+  LEDS.showColor(CHSV(128,255,255));
+ setupWiFi();
+ //  WiFi.begin("EAZHuis", "HommeJan54");
   LEDS.showColor(CHSV(myHue, mySaturation, myValue));
 
-  setupWiFi();
   startSettingsServer();
   //Websocket server
   webSocket.begin();
@@ -85,7 +96,26 @@ void setup() {
 }
 
 
+void startSleepTimer(int value){
+  sleepTime = value * 1000;
+  startTimeSleepTimer = millis();
+  inSleep = 1;
+}
 
+void disableSleepTimer(void){
+  inSleep = 0;
+}
+
+void whiteFadeToBlackBy(int amount){
+  if(oldPWMValue>amount){
+    oldPWMValue-= amount;
+    analogWrite(0,oldPWMValue);
+  }
+  else if(oldPWMValue!=0){
+    oldPWMValue=0;
+    analogWrite(0,oldPWMValue);
+  }
+}
 
 void loop() {
   webSocket.loop();                           // handles websockets
@@ -94,10 +124,14 @@ void loop() {
   {
     writeWhiteLedPWMIfChanged(myWhiteLedValue);  
   }
-  else
-  {
-    writeWhiteLedPWMIfChanged(0);      
+
+  if(inSleep == 1){
+    if (millis()-startTimeSleepTimer>sleepTime){
+      myEffect = 5;
+      inSleep = 0;
+   }
   }
+  
 
 
 switch (myEffect) {                           // switches between animations
@@ -119,6 +153,7 @@ switch (myEffect) {                           // switches between animations
       break;
     case 5: // Turn off all LEDs
       EVERY_N_MILLISECONDS( 20 ) {
+      whiteFadeToBlackBy(8);
       ledSet.fadeToBlackBy(2);
       LEDS.show();
       
@@ -149,7 +184,7 @@ switch (myEffect) {                           // switches between animations
   
   // EEPROM-commit and websocket broadcast -- they get called once if there has been a change 1 second ago and no further change since. This happens for performance reasons.
   currentChangeTime = millis();
-  if (currentChangeTime - lastChangeTime > 2000 && eepromCommitted == false) {
+  if (currentChangeTime - lastChangeTime > 5000 && eepromCommitted == false) {
      Serial.print("Heap free: ");  
      Serial.println(system_get_free_heap_size());
 

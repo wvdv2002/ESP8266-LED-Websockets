@@ -3,7 +3,7 @@
 
 
 #include "SettingsServer.h"
-//#include <ESP8266httpUpdate.h>
+#include <ESP8266httpUpdate.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <FS.h>
 #include <ESP8266SSDP.h>
@@ -105,7 +105,7 @@ void handle_refresh(void){
 }
 
 void handle_wifisetup(void){
-  server.send(200, "text/plain", "Resetting WiFi settings and rebooting, connect to PV_setup_AP to setup new wifi connection.");
+  server.send(200, "text/plain", "Resetting WiFi settings and rebooting, connect to Woodblock_AP to setup new wifi connection.");
   WiFiManager wifiManager;
   wifiManager.resetSettings();
 
@@ -187,6 +187,7 @@ void settingsServerTask(void){
 
 void showWifiConfigAPMessage(WiFiManager *myWiFiManager)
 {
+  
 }
 
 void setupWiFi(void){
@@ -194,12 +195,13 @@ void setupWiFi(void){
   // After connecting, parameter.getValue() will get you the configured value
   // id/name placeholder/prompt default length
   WiFi.hostname(pvhostname);
+
   WiFiManager wifiManager;
-  wifiManager.setMinimumSignalQuality();
-  wifiManager.setAPCallback(showWifiConfigAPMessage);
+  wifiManager.setMinimumSignalQuality(10);
+  //ifiManager.setAPCallback(showWifiConfigAPMessage);
   wifiManager.setConfigPortalTimeout(180);
-  wifiManager.setConnectTimeout(30);
-  if (!wifiManager.autoConnect("PV_setup_AP")) { 
+  wifiManager.setConnectTimeout(60);
+  if (!wifiManager.autoConnect("woodblock_AP")) { 
     Serial.println("failed to connect and hit timeout");
     delay(3000);
     //reset and try again, or maybe put it to deep sleep
@@ -211,6 +213,7 @@ void setupWiFi(void){
   Serial.println(WiFi.localIP());
   Serial.println(WiFi.gatewayIP());
   Serial.println(WiFi.subnetMask());
+
 }
 
 

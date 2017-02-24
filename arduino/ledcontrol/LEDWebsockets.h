@@ -2,17 +2,19 @@
 the code here http://www.whatimade.today/esp8266-on-websockets-mdns-ota-and-leds/ */
 
 WebSocketsServer webSocket = WebSocketsServer(81);
+extern void startSleepTimer(int);
+extern void disableSleepTimer(void);
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) {
 
     switch(type) {
         case WStype_DISCONNECTED:
-            USE_SERIAL.printf("[%u] Disconnected!\n", num);
+  //          USE_SERIAL.printf("[%u] Disconnected!\n", num);
             break;
         case WStype_CONNECTED:
             {
                 IPAddress ip = webSocket.remoteIP(num);
-                USE_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+ //               USE_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
         
         // send message to client
         String websocketStatusMessage = "H" + String(myHue) + ",S" + String(mySaturation) + ",V" + String(myValue) + ",W" + String(myWhiteLedValue); //Sends a string with the HSV and white led  values to the client website when the conection gets established
@@ -24,7 +26,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
         break;
         case WStype_TEXT:
             {
-              USE_SERIAL.printf("[%u] get Text: %s\n", num, payload);
+  //            USE_SERIAL.printf("[%u] get Text: %s\n", num, payload);
             
 
             // send message to client
@@ -34,8 +36,15 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
             // webSocket.broadcastTXT("message here");
 
             String text = String((char *) &payload[0]);
-
+              if (text.startsWith("f")) {
+                String fStrVal = (text.substring(text.indexOf("f") + 1, text.length()));
+                int fVal = fStrVal.toInt();
+                if (fVal != 0){
+                  startSleepTimer(fVal);
+                }
+              }
              if (text.startsWith("a")) {
+               disableSleepTimer();
                String xVal = (text.substring(text.indexOf("a") + 1, text.length()));
                 flickerLed = random(0,NUM_LEDS-1);
                 if (myEffect != xVal.toInt()) {  // only do stuff when there was a change
