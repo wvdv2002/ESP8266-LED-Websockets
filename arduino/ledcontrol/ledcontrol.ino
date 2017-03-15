@@ -102,6 +102,10 @@ void startSleepTimer(int value){
   inSleep = 1;
 }
 
+int getSleepTimerRemainingTime(void){
+  return (sleepTime-startTimeSleepTimer)/1000/60;
+}
+
 void disableSleepTimer(void){
   inSleep = 0;
 }
@@ -152,7 +156,7 @@ switch (myEffect) {                           // switches between animations
       Fire2012();
       break;
     case 5: // Turn off all LEDs
-      EVERY_N_MILLISECONDS( 20 ) {
+      EVERY_N_MILLISECONDS( 50 ) {
       whiteFadeToBlackBy(8);
       ledSet.fadeToBlackBy(2);
       LEDS.show();
@@ -190,7 +194,7 @@ switch (myEffect) {                           // switches between animations
 
     EEPROM.commit();
     eepromCommitted = true;
-    String websocketStatusMessage = "H" + String(myHue) + ",S" + String(mySaturation) + ",V" + String(myValue)+ ",W" + String(myWhiteLedValue);
+    String websocketStatusMessage = "H" + String(myHue) + ",S" + String(mySaturation) + ",V" + String(myValue) + ",W" + String(myWhiteLedValue) + ",F" + String(getSleepTimerRemainingTime()); //Sends a string with the HSV and white led  values to the client website when the conection gets established
     webSocket.broadcastTXT(websocketStatusMessage); // Tell all connected clients which HSV values are running
     //LEDS.showColor(CRGB(0, 255, 0));  //for debugging to see when if-clause fires
     //delay(50);                        //for debugging to see when if-clause fires

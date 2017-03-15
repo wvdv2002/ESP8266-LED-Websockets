@@ -3,6 +3,7 @@ the code here http://www.whatimade.today/esp8266-on-websockets-mdns-ota-and-leds
 
 WebSocketsServer webSocket = WebSocketsServer(81);
 extern void startSleepTimer(int);
+extern int getSleepTimerRemainingTime(void);
 extern void disableSleepTimer(void);
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) {
@@ -17,7 +18,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
  //               USE_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
         
         // send message to client
-        String websocketStatusMessage = "H" + String(myHue) + ",S" + String(mySaturation) + ",V" + String(myValue) + ",W" + String(myWhiteLedValue); //Sends a string with the HSV and white led  values to the client website when the conection gets established
+        String websocketStatusMessage = "H" + String(myHue) + ",S" + String(mySaturation) + ",V" + String(myValue) + ",W" + String(myWhiteLedValue) + ",F" + String(getSleepTimerRemainingTime()); //Sends a string with the HSV and white led  values to the client website when the conection gets established
         webSocket.sendTXT(num, websocketStatusMessage);
         
         String info = ESP.getResetInfo();

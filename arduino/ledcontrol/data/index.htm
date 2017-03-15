@@ -98,7 +98,8 @@ function webEvent(evt) {
         		document.getElementById('H').value=evt.data.substring(evt.data.indexOf("H")+1,evt.data.indexOf(",S")); 
         		document.getElementById('S').value=evt.data.substring(evt.data.indexOf("S")+1,evt.data.indexOf(",V"));
         		document.getElementById('V').value=evt.data.substring(evt.data.indexOf("V")+1,evt.data.indexOf(",W"));
-        		document.getElementById('W').value=evt.data.substring(evt.data.indexOf("W")+1,evt.data.length);
+        		document.getElementById('W').value=evt.data.substring(evt.data.indexOf("W")+1,evt.data.indexOf(",F"));
+				document.getElementById('sleepMinutes').value=(avt.data.substring(evt.data.indexOf("F"),evt.data.length))/60;
    		
 
 				} else {
