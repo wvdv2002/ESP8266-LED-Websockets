@@ -82,8 +82,8 @@ void ripple() {
         step = -1;
       }
     }
-
-    LEDS.show();
+    putOnStrip();
+    //LEDS.show();
   }
 }
 // RIPPLE END
@@ -146,7 +146,8 @@ void Fire2012()
       }
       leds[pixelnumber] = color;
     }
-    FastLED.show(); // display this frame
+    putOnStrip();
+//    FastLED.show(); // display this frame
   }
 }
 //Fire2012 End
@@ -161,7 +162,7 @@ void fadeall() {
 
 void cylon() {
   static uint8_t hue = 0;
-  static int i = 0;
+  static int stepCount = 0;
   static int cylon_state = 2;
   static unsigned long cylonTick = millis();
   //Serial.print("x");
@@ -169,24 +170,25 @@ void cylon() {
   if ((millis() - cylonTick) > 200) //if the amount of milliseconds difference is too large, reset the difference.
   {
     cylonTick = millis() - 30;
-              Serial.print("mi:");
-          Serial.print(millis());
-          Serial.print(" ");
-          Serial.println(cylonTick);
+ //             Serial.print("mi:");
+ //         Serial.print(millis());
+ //         Serial.print(" ");
+ //         Serial.println(cylonTick);
   }
   if ((millis() - cylonTick) > 25)
   {
     cylonTick += 25;
     switch (cylon_state) {
       case 0:
-        if (i < NUM_LEDS) {
-          i++;
+        if (stepCount < NUM_LEDS) {
+          stepCount++;
           // Set the i'th led to red
-          leds[i] = CHSV(hue++, 255, 255);
+          leds[stepCount] = CHSV(hue++, 255, 255);
           // Show the leds
-          FastLED.show();
+              putOnStrip();
+          //FastLED.show();
           // now that we've shown the leds, reset the i'th led to black
-          // leds[i] = CRGB::Black;
+          // leds[stepCount] = CRGB::Black;
           fadeall();
           // Wait a little bit before we loop around and do it again
 
@@ -197,12 +199,13 @@ void cylon() {
         }
         break;
       case 1:
-        if (i > 0) {
+        if (stepCount > 0) {
           // Now go in the other direction.
           // Set the i'th led to red
-          leds[(i--) - 1] = CHSV(hue++, 255, 255);
+          leds[(stepCount--) - 1] = CHSV(hue++, 255, 255);
           // Show the leds
-          FastLED.show();
+              putOnStrip();
+//          FastLED.show();
           // now that we've shown the leds, reset the i'th led to black
           // leds[i] = CRGB::Black;
           fadeall();
@@ -216,7 +219,7 @@ void cylon() {
       default:
         cylon_state = 0;
         cylonTick = millis();
-        i = 0;
+        stepCount = 0;
         break;
     }
   }
