@@ -116,9 +116,11 @@ function getParameterByName(name, url) {
 }
  
  var ipPath = getParameterByName('ip');
- if(ipPath==""){
+ console.log("path=" + ipPath)
+ if(ipPath===null){
 		ipPath = location.hostname
 }
+ console.log("path=" + ipPath)
  document.getElementById('ip').value = "ws://"+ipPath+":81/";
  mod();
  </script>
