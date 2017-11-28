@@ -23,6 +23,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
         
         String info = ESP.getResetInfo();
         webSocket.sendTXT(num, info); //Handy for debugging
+
+        webSocket.sendTXT(num,namesList);
 			}
         break;
         case WStype_TEXT:

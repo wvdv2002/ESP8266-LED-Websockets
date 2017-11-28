@@ -1,6 +1,6 @@
-/* This is currently a (working) mess copied together from animation examples over the web
-  and I will try to credit everyone and clean it up over time - if you see code here that you wrote
-  and you want to be credited, please let me know - I do not wish to cause offense. */
+
+
+typedef void (*SimplePatternList[])();                        // List of patterns to cycle through.  Each is defined as a separate function below.
 
 //RIPPLE START
 int color;
@@ -14,6 +14,9 @@ int diff;
 uint32_t currentBg = random(256);
 uint32_t nextBg = currentBg;
 
+
+SimplePatternList ledPatterns = {ripple, Fire2012, cylon, rainbow };               // Don't know why this has to be here. . .
+String namesList = "Ripple,Fire,Cylon,Rainbow";
 
 int wrap(int step) {
   if (step < 0) return NUM_LEDS + step;
@@ -202,7 +205,8 @@ void cylon() {
         if (stepCount > 0) {
           // Now go in the other direction.
           // Set the i'th led to red
-          leds[(stepCount--) - 1] = CHSV(hue++, 255, 255);
+          leds[stepCount-1] = CHSV(hue++, 255, 255);
+          stepCount--;
           // Show the leds
               putOnStrip();
 //          FastLED.show();
