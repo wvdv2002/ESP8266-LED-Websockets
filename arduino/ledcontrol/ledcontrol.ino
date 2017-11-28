@@ -156,9 +156,7 @@ void loop() {
   }
   
 
-switch (myEffect) {                           // switches between animations
-    case 1: // Solid Color
-      EVERY_N_MILLISECONDS( 20 ) {
+  EVERY_N_MILLISECONDS( 20 ) {
         ledSet = CHSV(myHue, mySaturation, myValue);
         putOnStrip();
         //LEDS.show();

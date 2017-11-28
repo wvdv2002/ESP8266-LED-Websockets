@@ -85,8 +85,6 @@ void ripple() {
         step = -1;
       }
     }
-    putOnStrip();
-    //LEDS.show();
   }
 }
 // RIPPLE END
