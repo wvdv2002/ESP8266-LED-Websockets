@@ -35,6 +35,7 @@ byte myEffect = 1;                  //what animation/effect should be displayed
 byte myHue = 33;                    //I am using HSV, the initial settings display something like "warm white" color at the first start
 byte mySaturation = 168;
 byte myValue = 255;
+unsigned int myAnimationSpeed = 50;
 unsigned int myWhiteLedValue=0;
 byte rainbowHue = myHue;            //Using this so the rainbow effect doesn't overwrite the hue set on the website
 
@@ -127,6 +128,10 @@ int getSleepTimerRemainingTime(void){
   return (sleepTime-startTimeSleepTimer)/1000/60;
 }
 
+int getAnimationSpeed(void) {
+  return myAnimationSpeed;
+}
+
 void disableSleepTimer(void){
   inSleep = 0;
 }
@@ -143,69 +148,55 @@ void whiteFadeToBlackBy(int amount){
 void loop() {
   webSocket.loop();                           // handles websockets
   settingsServerTask();
-  if (myEffect!=5)
+  if (myEffect!=0)
   {
     writeWhiteLedPWMIfChanged(myWhiteLedValue);  
   }
-
   if(inSleep == 1){
     if (millis()-startTimeSleepTimer>sleepTime){
-      myEffect = 5;
+      myEffect = 0;
       inSleep = 0;
    }
   }
   
-
-  EVERY_N_MILLISECONDS( 20 ) {
+EVERY_N_MILLISECONDS( myAnimationSpeed ) {
+ switch(myEffect){
+     case 1:
         ledSet = CHSV(myHue, mySaturation, myValue);
-        putOnStrip();
-        //LEDS.show();
-      }
-
       break;
-    case 2: // Ripple effect
+    case 3: // Ripple effect
       ripple();
       break;
-    case 3: // Cylon effect
+    case 5: // Cylon effect
       cylon();
       break;
     case 4: // Fire effect
       Fire2012();
       break;
-    case 5: // Turn off all LEDs
-      EVERY_N_MILLISECONDS( 50 ) {
+    case 0: // Turn off all LEDs
       whiteFadeToBlackBy(8);
       ledSet.fadeToBlackBy(2);
-      putOnStrip();
-      //LEDS.show();
-      
-      }
       break;
     case 6: // loop through hues with all leds the same color. Can easily be changed to display a classic rainbow loop
-      EVERY_N_MILLISECONDS( 250 ) {
       rainbowHue = rainbowHue + 1;
       ledSet = CHSV(rainbowHue, mySaturation, myValue);
-      putOnStrip();
-     }
       break;
-    case 7: // make a single, random LED act as a candle
-      currentTime = millis();
+    case 2: // make a single, random LED act as a candle
       ledSet.fadeToBlackBy(1);
       leds[flickerLed] = CHSV(flickerHue, 255, flickerValue);
-      flickerTime = random(150, 500);
       if (currentTime - previousTime > flickerTime) {
         flickerValue = 110 + random(-10, +10); //70 works best
         flickerHue = 33; //random(33, 34);
         previousTime = currentTime;
-        putOnStrip();
-        //LEDS.show();
+        flickerTime = random(150, 500);
       }
       break;
     default: 
 //      LEDS.showColor(CRGB(0, 255, 0)); // Bright green in case of an error
       ledSet = CRGB(0,255,0);
-      putOnStrip();
     break;
+  }
+  putOnStrip();
   }
 
   
@@ -217,9 +208,7 @@ void loop() {
 
     EEPROM.commit();
     eepromCommitted = true;
-    String websocketStatusMessage = "H" + String(myHue) + ",S" + String(mySaturation) + ",V" + String(myValue) + ",W" + String(myWhiteLedValue) + ",F" + String(getSleepTimerRemainingTime()); //Sends a string with the HSV and white led  values to the client website when the conection gets established
-    webSocket.broadcastTXT(websocketStatusMessage); // Tell all connected clients which HSV values are running
-    //LEDS.showColor(CRGB(0, 255, 0));  //for debugging to see when if-clause fires
-    //delay(50);                        //for debugging to see when if-clause fires
+    String aMessage = getStatusString();
+    webSocket.broadcastTXT(aMessage); // Tell all connected clients which HSV values are running
   }
 }

@@ -7,25 +7,22 @@
  <body>LED Control:<br/><br/>
  <input type="text" id="ip" value="" onblur='mod()' /><br />
  <br />
-<button onclick="ledWhite()">Solid</button>  
-<button onclick="ledRipple()">Ripple</button>  
-<button onclick="ledCylon()">Cylon</button>  
-<button onclick="ledFire()">Fire</button> <br /> <br />
-<button onclick="ledOff()">Off</button>  
-<button onclick="ledRainbow()">Rainbow</button>  
-<button onclick="ledCandle()">Candle</button>  <br /> <br />
 
-  
+ <div id="patternButtons">
+ 
+ </div> <br/><br/>
+ 
  
  H: <input id="H" type="range" min="0" max="255" step="1" oninput="ledHue(this.value);"/><br/>
  S: <input id="S" type="range" min="0" max="255" step="1" oninput="ledSaturation(this.value);"/><br/>
  V: <input id="V" type="range" min="0" max="255" step="1" oninput="ledValue(this.value);" /><br/>
  W: <input id="W" type="range" min="0" max="1023" step="1" oninput="whiteLedValue(this.value);" /><br/> <br />
- 
+ Spd: <input id="SPD" type="range" min="0" max="100" step="1" oninput="animationSpeedSet(this.value);" /><br/> <br />
   <button onclick="sleepTime(document.getElementById('sleepMinutes').value);">Sleep</button>: <input type="text" size="4" id="sleepMinutes" value="60"/><br /><br />
   
   <input id="Sleep" oninput="document.getElementById('sleepMinutes').value=this.value;" type="range" min="1" max="120" step="1" value="60"/><br/><br />
-
+	
+  <input type="text" id="patterns" value=""/><br />
   <input type="text" id="msgESP" value=""/><br />
  </body>
  <footer>
@@ -34,7 +31,7 @@
 
 var ipValue;
 var connection;
-
+var patterns = [];
 function mod(){
 var text = document.getElementById('ip').value;
 ipValue = text;	
@@ -48,35 +45,6 @@ console.log("IP value changed to:"+ipValue);
 }
 	
 
-function ledWhite() {
-	var toSend = "a1";
-	connection.send(toSend); 
-};
-
-function ledRipple() {
-	var toSend = "a2";
-	connection.send(toSend); 
-};
-function ledCylon() {
-	var toSend = "a3";
-	connection.send(toSend); 
-};
-function ledFire() {
-	var toSend = "a4";
-	connection.send(toSend); 
-};
-function ledOff() {
-	var toSend = "a5";
-	connection.send(toSend); 
-};
-function ledRainbow() {
-	var toSend = "a6";
-	connection.send(toSend); 
-};
-function ledCandle() {
-	var toSend = "a7";
-	connection.send(toSend); 
-};
 function sleepTime(newValue) {
 	connection.send("f"+newValue*60); 
 };
@@ -93,21 +61,65 @@ function ledValue(newValue) {
 function whiteLedValue(newValue) {
 	connection.send("e"+newValue); 
 };
+function animationSpeedSet(newValue){
+	connection.send("t"+newValue)
+}
+function selectAnimation(aPattern){
+	connection.send("a"+aPattern.substring(3))
+}
+
 function webEvent(evt) {
         	if (evt.data.substring(0,1)=="H") {
         		document.getElementById('H').value=evt.data.substring(evt.data.indexOf("H")+1,evt.data.indexOf(",S")); 
         		document.getElementById('S').value=evt.data.substring(evt.data.indexOf("S")+1,evt.data.indexOf(",V"));
         		document.getElementById('V').value=evt.data.substring(evt.data.indexOf("V")+1,evt.data.indexOf(",W"));
-        		document.getElementById('W').value=evt.data.substring(evt.data.indexOf("W")+1,evt.data.indexOf(",F"));
-				document.getElementById('sleepMinutes').value=(avt.data.substring(evt.data.indexOf("F"),evt.data.length))/60;
-   		
-
-				} else {
+                document.getElementById('W').value=evt.data.substring(evt.data.indexOf("W")+1,evt.data.indexOf(",T"));
+			    document.getElementById('SPD').value=evt.data.substring(evt.data.indexOf("T")+1,evt.data.indexOf(",F"));
+				document.getElementById('sleepMinutes').value=(evt.data.substring(evt.data.indexOf("F")))/60;
+				} 
+			else if (evt.data.substring(0,5)=="PROGS"){
+				var patternString = evt.data.substring(5)
+					document.getElementById("patterns").value = patternString
+					createPatternButtons(patternString.split(','))
+				}	
+			else {
         		document.getElementById('msgESP').value=evt.data;
         	}
 }
 
- document.getElementById('ip').value = "ws://"+location.hostname+":81/";
+function createPatternButtons(aListOfPatterns){
+	var btn;
+	var textbtn;
+	patterns = aListOfPatterns
+	for (aPattern in aListOfPatterns){
+		btn = document.createElement("BUTTON")
+		textbtn = document.createTextNode(aListOfPatterns[aPattern])
+		btn.appendChild(textbtn)
+		btn.id="PAT"+aPattern
+		btn.addEventListener("click",function(){selectAnimation(this.id)},false)
+		document.getElementById('patternButtons').appendChild(btn)
+		document.getElementById('patternButtons').appendChild(document.createTextNode(" "))
+		
+
+		
+	}
+}
+
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+ 
+ var ipPath = getParameterByName('ip');
+ if(ipPath==""){
+		ipPath = location.hostname
+}
+ document.getElementById('ip').value = "ws://"+ipPath+":81/";
  mod();
  </script>
  </footer>

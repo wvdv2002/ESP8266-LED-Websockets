@@ -14,15 +14,22 @@ int diff;
 uint32_t currentBg = random(256);
 uint32_t nextBg = currentBg;
 
-
-SimplePatternList ledPatterns = {ripple, Fire2012, cylon, rainbow };               // Don't know why this has to be here. . .
-String namesList = "Ripple,Fire,Cylon,Rainbow";
+void ripple(void);
+void Fire2012(void);
+void cylon(void);
+void rainbow(void);
+void ledsOff(void);
+void ledsSolid(void);
+void ledsCandle(void);
 
 int wrap(int step) {
   if (step < 0) return NUM_LEDS + step;
   if (step > NUM_LEDS - 1) return step - NUM_LEDS;
   return step;
 }
+
+SimplePatternList ledPatterns = {ledsOff,ledsSolid,ledsCandle,ripple, Fire2012, cylon, rainbow};               // Don't know why this has to be here. . .
+String ledPatternNamesList = "Off,Solid,Candle,Ripple,Fire,Cylon,Rainbow";
 
 
 void one_color_allHSV(int ahue, int abright) {                // SET ALL LEDS TO ONE COLOR (HSV)
@@ -32,21 +39,6 @@ void one_color_allHSV(int ahue, int abright) {                // SET ALL LEDS TO
 }
 
 void ripple() {
-  static unsigned long rippleTick = millis();
-  if ((millis() - rippleTick) > 300) //if the amount of milliseconds difference is too large, reset the difference.
-  {
-    rippleTick = millis() - (100 + 1);
-    
-              Serial.print("mi:");
-          Serial.print(millis());
-          Serial.print(" ");
-          Serial.println(rippleTick);
-  }
-  if ((millis() - rippleTick) > 100)
-  {
-    rippleTick += 100;
-
-
     if (currentBg == nextBg) {
       nextBg = random(256);
     }
@@ -85,7 +77,6 @@ void ripple() {
         step = -1;
       }
     }
-  }
 }
 // RIPPLE END
 
@@ -106,20 +97,6 @@ void Fire2012()
 {
   // Array of temperature readings at each simulation cell
   static byte heat[NUM_LEDS];
-  static unsigned long fireTick = millis();
-  if ((millis() - fireTick) > 300) //if the amount of milliseconds difference is too large, reset the difference.
-  {
-    fireTick = millis() + (1000 / FRAMES_PER_SECOND + 1);
-          Serial.print("mi:");
-          Serial.print(millis());
-          Serial.print(" ");
-          Serial.println(fireTick);
-  }
-  if ((millis() - fireTick) > (1000 / FRAMES_PER_SECOND))
-  {
-    fireTick += (1000 / FRAMES_PER_SECOND);
-
-
     // Step 1.  Cool down every cell a little
     for ( int i = 0; i < NUM_LEDS; i++) {
       heat[i] = qsub8( heat[i],  random8(0, ((COOLING * 10) / NUM_LEDS) + 2));
@@ -147,9 +124,6 @@ void Fire2012()
       }
       leds[pixelnumber] = color;
     }
-    putOnStrip();
-//    FastLED.show(); // display this frame
-  }
 }
 //Fire2012 End
 //CYLON START
@@ -165,28 +139,15 @@ void cylon() {
   static uint8_t hue = 0;
   static int stepCount = 0;
   static int cylon_state = 2;
-  static unsigned long cylonTick = millis();
   //Serial.print("x");
   // First slide the led in one direction
-  if ((millis() - cylonTick) > 200) //if the amount of milliseconds difference is too large, reset the difference.
-  {
-    cylonTick = millis() - 30;
- //             Serial.print("mi:");
- //         Serial.print(millis());
- //         Serial.print(" ");
- //         Serial.println(cylonTick);
-  }
-  if ((millis() - cylonTick) > 25)
-  {
-    cylonTick += 25;
     switch (cylon_state) {
       case 0:
-        if (stepCount < NUM_LEDS) {
+        if (stepCount < NUM_LEDS-1) {
           stepCount++;
           // Set the i'th led to red
           leds[stepCount] = CHSV(hue++, 255, 255);
           // Show the leds
-              putOnStrip();
           //FastLED.show();
           // now that we've shown the leds, reset the i'th led to black
           // leds[stepCount] = CRGB::Black;
@@ -203,11 +164,8 @@ void cylon() {
         if (stepCount > 0) {
           // Now go in the other direction.
           // Set the i'th led to red
-          leds[stepCount-1] = CHSV(hue++, 255, 255);
-          stepCount--;
-          // Show the leds
-              putOnStrip();
-//          FastLED.show();
+           stepCount--;
+          leds[stepCount] = CHSV(hue++, 255, 255);
           // now that we've shown the leds, reset the i'th led to black
           // leds[i] = CRGB::Black;
           fadeall();
@@ -220,10 +178,8 @@ void cylon() {
         break;
       default:
         cylon_state = 0;
-        cylonTick = millis();
         stepCount = 0;
         break;
     }
-  }
 }
 //CYLON END
