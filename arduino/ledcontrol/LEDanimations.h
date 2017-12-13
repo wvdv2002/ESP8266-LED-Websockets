@@ -28,7 +28,7 @@ int wrap(int step) {
   return step;
 }
 
-SimplePatternList ledPatterns = {ledsOff,ledsSolid,ledsCandle,ripple, Fire2012, cylon, rainbow};               // Don't know why this has to be here. . .
+SimplePatternList ledPatterns = {ledsOff,ledsSolid,ledsCandle,ripple, Fire2012, cylon, rainbow};       
 String ledPatternNamesList = "Off,Solid,Candle,Ripple,Fire,Cylon,Rainbow";
 
 
@@ -37,6 +37,13 @@ void one_color_allHSV(int ahue, int abright) {                // SET ALL LEDS TO
     leds[i] = CHSV(ahue, 255, abright);
   }
 }
+
+
+void ledsOff(void){}
+void ledsOn(void){}
+void rainbow(void){}
+void ledsCandle(void){}
+void ledsSolid(void){}
 
 void ripple() {
     if (currentBg == nextBg) {

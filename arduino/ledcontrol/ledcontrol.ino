@@ -1,6 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <FastLED.h>
 #include <Adafruit_NeoPixel.h>
+#include <PubSubClient.h>
 
 #include <Hash.h>
 #include <EEPROM.h>
@@ -22,7 +23,7 @@ extern "C" {
 // Defining LED strip
 #define NUM_LEDS 240                 //Number of LEDs in your strip
 #define DATA_PIN 15                //Using WS2812B -- if you use APA102 or other 4-wire LEDs you need to also add a clock pin
-#define DATAFASTLED_PIN 0
+//#define DATAFASTLED_PIN 0
 #define BRIGHTNESS 255
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, DATA_PIN, NEO_GRBW + NEO_KHZ800);
 
@@ -89,13 +90,13 @@ void setup() {
   EEPROM.begin(6);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
   Serial.begin(115200);
   Serial.println("Ledtest example");
-  LEDS.addLeds<WS2812B,DATAFASTLED_PIN,GRB>(leds,NUM_LEDS);  // Initialize the LEDs
+ // LEDS.addLeds<WS2812B,DATAFASTLED_PIN,GRB>(leds,NUM_LEDS);  // Initialize the LEDs
 
 
   // Reading EEPROM
   myEffect = 1;                         // Only read EEPROM for the myEffect variable after you're sure the animation you are testing won't break OTA updates, make your ESP restart etc. or you'll need to use the USB interface to update the module.
-  
 //  myEffect = EEPROM.read(0); //blocking effects had a bad effect on the website hosting, without commenting this away even restarting would not help
+
   myHue = EEPROM.read(1);
   mySaturation = EEPROM.read(2);
   myValue = EEPROM.read(3);
@@ -165,14 +166,10 @@ EVERY_N_MILLISECONDS( myAnimationSpeed ) {
         ledSet = CHSV(myHue, mySaturation, myValue);
       break;
     case 3: // Ripple effect
-      ripple();
-      break;
-    case 5: // Cylon effect
-      cylon();
-      break;
     case 4: // Fire effect
-      Fire2012();
-      break;
+    case 5: // Cylon effect
+    ledPatterns[myEffect]();
+    break;
     case 0: // Turn off all LEDs
       whiteFadeToBlackBy(8);
       ledSet.fadeToBlackBy(2);
