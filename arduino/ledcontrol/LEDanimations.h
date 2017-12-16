@@ -22,12 +22,7 @@ void ledsOff(void);
 void ledsSolid(void);
 void ledsCandle(void);
 
-int wrap(int step) {
-  if (step < 0) return NUM_LEDS + step;
-  if (step > NUM_LEDS - 1) return step - NUM_LEDS;
-  return step;
-}
-
+#define AMOUNT_OF_ANIMATIONS 7
 SimplePatternList ledPatterns = {ledsOff,ledsSolid,ledsCandle,ripple, Fire2012, cylon, rainbow};       
 String ledPatternNamesList = "Off,Solid,Candle,Ripple,Fire,Cylon,Rainbow";
 
@@ -42,8 +37,39 @@ void one_color_allHSV(int ahue, int abright) {                // SET ALL LEDS TO
 void ledsOff(void){}
 void ledsOn(void){}
 void rainbow(void){}
-void ledsCandle(void){}
-void ledsSolid(void){}
+
+int flickerLed = 0;
+void ledsCandle(void)
+{
+  static int flickerTime = 200;
+
+  static int flickerValue = 110;
+  static int flickerHue = 33;
+  static unsigned long currentTime = 0;
+  static unsigned long previousTime = 0;
+  currentTime = millis();
+  ledSet.fadeToBlackBy(1);
+  leds[flickerLed] = CHSV(flickerHue, 255, flickerValue);
+  if (currentTime - previousTime > flickerTime) {
+    flickerValue = 110 + random(-10, +10); //70 works best
+    flickerHue = 33; //random(33, 34);
+    previousTime = currentTime;
+    flickerTime = random(150, 500);
+  }  
+}
+
+
+void ledsSolid(void){
+  ledSet = CHSV(myHue, mySaturation, myValue);  
+}
+
+
+
+int wrap(int step) {
+  if (step < 0) return NUM_LEDS + step;
+  if (step > NUM_LEDS - 1) return step - NUM_LEDS;
+  return step;
+}
 
 void ripple() {
     if (currentBg == nextBg) {
@@ -86,9 +112,6 @@ void ripple() {
     }
 }
 // RIPPLE END
-
-// Fire2012 Start
-#define FRAMES_PER_SECOND 25
 
 bool gReverseDirection = false;
 
@@ -133,6 +156,8 @@ void Fire2012()
     }
 }
 //Fire2012 End
+
+
 //CYLON START
 
 
@@ -152,15 +177,8 @@ void cylon() {
       case 0:
         if (stepCount < NUM_LEDS-1) {
           stepCount++;
-          // Set the i'th led to red
           leds[stepCount] = CHSV(hue++, 255, 255);
-          // Show the leds
-          //FastLED.show();
-          // now that we've shown the leds, reset the i'th led to black
-          // leds[stepCount] = CRGB::Black;
           fadeall();
-          // Wait a little bit before we loop around and do it again
-
         }
         else
         {
@@ -173,10 +191,7 @@ void cylon() {
           // Set the i'th led to red
            stepCount--;
           leds[stepCount] = CHSV(hue++, 255, 255);
-          // now that we've shown the leds, reset the i'th led to black
-          // leds[i] = CRGB::Black;
           fadeall();
-          // Wait a little bit before we loop around and do it again
         }
         else
         {
@@ -190,3 +205,7 @@ void cylon() {
     }
 }
 //CYLON END
+
+
+
+

@@ -23,16 +23,15 @@ extern "C" {
 // Defining LED strip
 #define NUM_LEDS 240                 //Number of LEDs in your strip
 #define DATA_PIN 15                //Using WS2812B -- if you use APA102 or other 4-wire LEDs you need to also add a clock pin
-//#define DATAFASTLED_PIN 0
 #define BRIGHTNESS 255
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, DATA_PIN, NEO_GRBW + NEO_KHZ800);
 
 CRGB leds[NUM_LEDS];
 CRGBSet ledSet(leds, NUM_LEDS);    //Trying LEDSet from FastLED
 void putOnStrip(void);
+
 //Some Variables
 byte myEffect = 1;                  //what animation/effect should be displayed
-
 byte myHue = 33;                    //I am using HSV, the initial settings display something like "warm white" color at the first start
 byte mySaturation = 168;
 byte myValue = 255;
@@ -40,15 +39,14 @@ unsigned int myAnimationSpeed = 50;
 unsigned int myWhiteLedValue=0;
 byte rainbowHue = myHue;            //Using this so the rainbow effect doesn't overwrite the hue set on the website
 
-int flickerTime = random(200, 400);
-int flickerLed;
-int flickerValue = 110 + random(-3, +3); //70 works nice, too
-int flickerHue = 33;
+void changeHue(int);
+void changeSaturation(int);
+void changeRGBIntensity(int);
+void changeWhiteIntensity(int);
+void changeLedAnimation(int);
+void changeAnimationSpeed(int);
 
 bool eepromCommitted = true;      
-
-unsigned long currentTime = 0;
-unsigned long previousTime = 0;
 unsigned long lastChangeTime = 0;
 unsigned long currentChangeTime = 0;
 unsigned long startTimeSleepTimer = 0;
@@ -58,26 +56,6 @@ bool inSleep = 0;
 #include "LEDanimations.h"
 #include "LEDWebsockets.h"
 int oldPWMValue = 9999;
-
-void writeWhiteLedPWMIfChanged(int value)
-{
-
-  if (oldPWMValue != value)
-  {
-    oldPWMValue = value;
-    putOnStrip();
-  }
-}
-
-void putOnStrip(void){
-  uint8_t pwmTemp=oldPWMValue/4;
-  for(int i=0;i<strip.numPixels();i++)
-  {
-    strip.setPixelColor(i,leds[i].r,leds[i].g,leds[i].b,pwmTemp);  
-  }
-  strip.show();
-}
-
 
 void setup() {
   strip.setBrightness(BRIGHTNESS);
@@ -90,26 +68,20 @@ void setup() {
   EEPROM.begin(6);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
   Serial.begin(115200);
   Serial.println("Ledtest example");
- // LEDS.addLeds<WS2812B,DATAFASTLED_PIN,GRB>(leds,NUM_LEDS);  // Initialize the LEDs
-
 
   // Reading EEPROM
   myEffect = 1;                         // Only read EEPROM for the myEffect variable after you're sure the animation you are testing won't break OTA updates, make your ESP restart etc. or you'll need to use the USB interface to update the module.
 //  myEffect = EEPROM.read(0); //blocking effects had a bad effect on the website hosting, without commenting this away even restarting would not help
-
   myHue = EEPROM.read(1);
   mySaturation = EEPROM.read(2);
   myValue = EEPROM.read(3);
 
-//  LEDS.showColor(CHSV(0,255,255));
   ledSet = CHSV(0,100,100);
   putOnStrip();
-  delay(100);                                         //Delay needed, otherwise showcolor doesn't light up all leds or they produce errors after turning on the power supply - you will need to experiment
+  delay(100);                                         
   ledSet = CHSV(0,100,100);
-
   putOnStrip();
- setupWiFi();
- //  WiFi.begin("EAZHuis", "HommeJan54");
+  setupWiFi();
   ledSet = CHSV(myHue, mySaturation, myValue);
   putOnStrip();
   startSettingsServer();
@@ -160,40 +132,25 @@ void loop() {
    }
   }
   
-EVERY_N_MILLISECONDS( myAnimationSpeed ) {
- switch(myEffect){
-     case 1:
-        ledSet = CHSV(myHue, mySaturation, myValue);
+  EVERY_N_MILLISECONDS( myAnimationSpeed ) {
+   switch(myEffect){ //Override some led animation code here if necessary.
+      case 0: // Turn off all LEDs
+        whiteFadeToBlackBy(8);
+        ledSet.fadeToBlackBy(2);
+        break;
+      case 6: // loop through hues with all leds the same color. Can easily be changed to display a classic rainbow loop
+        rainbowHue = rainbowHue + 1;
+        ledSet = CHSV(rainbowHue, mySaturation, myValue);
+        break;
+      default: 
+        if(myEffect<AMOUNT_OF_ANIMATIONS){
+          ledPatterns[myEffect]();
+        }else{  //Generate  visual error if too high a number of animation is set.
+          ledSet = CRGB(0,255,0);
+        }
       break;
-    case 3: // Ripple effect
-    case 4: // Fire effect
-    case 5: // Cylon effect
-    ledPatterns[myEffect]();
-    break;
-    case 0: // Turn off all LEDs
-      whiteFadeToBlackBy(8);
-      ledSet.fadeToBlackBy(2);
-      break;
-    case 6: // loop through hues with all leds the same color. Can easily be changed to display a classic rainbow loop
-      rainbowHue = rainbowHue + 1;
-      ledSet = CHSV(rainbowHue, mySaturation, myValue);
-      break;
-    case 2: // make a single, random LED act as a candle
-      ledSet.fadeToBlackBy(1);
-      leds[flickerLed] = CHSV(flickerHue, 255, flickerValue);
-      if (currentTime - previousTime > flickerTime) {
-        flickerValue = 110 + random(-10, +10); //70 works best
-        flickerHue = 33; //random(33, 34);
-        previousTime = currentTime;
-        flickerTime = random(150, 500);
-      }
-      break;
-    default: 
-//      LEDS.showColor(CRGB(0, 255, 0)); // Bright green in case of an error
-      ledSet = CRGB(0,255,0);
-    break;
-  }
-  putOnStrip();
+    }
+    putOnStrip();
   }
 
   
@@ -209,3 +166,88 @@ EVERY_N_MILLISECONDS( myAnimationSpeed ) {
     webSocket.broadcastTXT(aMessage); // Tell all connected clients which HSV values are running
   }
 }
+
+
+void writeWhiteLedPWMIfChanged(int value)
+{
+  if (oldPWMValue != value)
+  {
+    oldPWMValue = value;
+    putOnStrip();
+  }
+}
+
+
+void changeLedAnimation(int animation){
+  flickerLed = random(0,NUM_LEDS-1); //Update flickerled position, hacky I know ;(
+  if (myEffect != animation) {  // only do stuff when there was a change
+    myEffect = animation;
+    rainbowHue = myHue;
+    EEPROM.write(0, myEffect);       //stores the variable but needs to be committed to EEPROM before being saved - this happens in the loop
+    lastChangeTime = millis();
+    eepromCommitted = false;
+  }
+}
+
+void changeHue(int hue){
+  if (myHue != hue) {
+    myHue = hue;
+    rainbowHue = myHue;
+    EEPROM.write(1, myHue);
+    lastChangeTime = millis();
+    eepromCommitted = false;
+  }
+}
+
+void changeSaturation(int saturation){
+  if (mySaturation != saturation) {
+    mySaturation = saturation;
+    EEPROM.write(2, mySaturation);
+    lastChangeTime = millis();
+    eepromCommitted = false;
+  }
+}
+
+void changeWhiteIntensity(int value){
+  if (myWhiteLedValue != value) {
+    myWhiteLedValue = value;
+    EEPROM.write(4, myWhiteLedValue&&255);
+    EEPROM.write(5, myWhiteLedValue/256);
+    lastChangeTime = millis();
+    eepromCommitted = false;
+  }
+}
+
+void changeRGBIntensity(int value){
+  if (myValue != value) {
+    myValue = value;
+    EEPROM.write(3, myValue);
+    lastChangeTime = millis();
+    eepromCommitted = false;
+  }
+}
+
+void changeAnimationSpeed(int value){
+  if(value < 10){
+    value = 10;
+  }
+  if(value > 255){
+    value = 255;
+  }
+  if (myAnimationSpeed != value) {
+    myAnimationSpeed = value;
+    EEPROM.write(6, myAnimationSpeed&255);
+    lastChangeTime = millis();
+    eepromCommitted = false;
+  }                
+}
+
+void putOnStrip(void){
+  uint8_t pwmTemp=oldPWMValue/4;
+  for(int i=0;i<strip.numPixels();i++)
+  {
+    strip.setPixelColor(i,leds[i].r,leds[i].g,leds[i].b,pwmTemp);  
+  }
+  strip.show();
+}
+

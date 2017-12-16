@@ -67,71 +67,28 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
              if (text.startsWith("a")) {
                disableSleepTimer();
                String xVal = (text.substring(text.indexOf("a") + 1, text.length()));
-                flickerLed = random(0,NUM_LEDS-1);
-                if (myEffect != xVal.toInt()) {  // only do stuff when there was a change
-                myEffect = xVal.toInt();
-                rainbowHue = myHue;
-                EEPROM.write(0, myEffect);       //stores the variable but needs to be committed to EEPROM before being saved - this happens in the loop
-                lastChangeTime = millis();
-                eepromCommitted = false;
-                }
+                changeLedAnimation(xVal.toInt());
              }
              if (text.startsWith("b")) {
                String xVal = (text.substring(text.indexOf("b") + 1, text.length()));
-                if (myHue != xVal.toInt()) {
-                myHue = xVal.toInt();
-                rainbowHue = myHue;
-                EEPROM.write(1, myHue);
-                lastChangeTime = millis();
-                eepromCommitted = false;
-                }
+                changeHue(xVal.toInt());
              }
               if (text.startsWith("c")) {
                String xVal = (text.substring(text.indexOf("c") + 1, text.length()));
-                if (mySaturation != xVal.toInt()) {
-                mySaturation = xVal.toInt();
-                EEPROM.write(2, mySaturation);
-                lastChangeTime = millis();
-                eepromCommitted = false;
-                }
-             }
+               changeSaturation(xVal.toInt());
+               }
               if (text.startsWith("d")) {
                String xVal = (text.substring(text.indexOf("d") + 1, text.length()));
-                if (myValue != xVal.toInt()) {
-                myValue = xVal.toInt();
-                EEPROM.write(3, myValue);
-                lastChangeTime = millis();
-                eepromCommitted = false;
-                }
+                changeRGBIntensity(xVal.toInt());
              }
               if (text.startsWith("e")) {
                String xVal = (text.substring(text.indexOf("e") + 1, text.length()));
-                if (myWhiteLedValue != xVal.toInt()) {
-                myWhiteLedValue = xVal.toInt();
-                EEPROM.write(4, myWhiteLedValue&&255);
-                EEPROM.write(5, myWhiteLedValue/256);
-                lastChangeTime = millis();
-                eepromCommitted = false;
-                }
+                changeWhiteIntensity(xVal.toInt());
              }
               if (text.startsWith("t")) {
                String xVal = (text.substring(text.indexOf("t") + 1, text.length()));
-                if (myAnimationSpeed != xVal.toInt()) {
-                myAnimationSpeed = xVal.toInt();
-                if(myAnimationSpeed < 10){
-                  myAnimationSpeed = 10;
-                }
-                EEPROM.write(6, myAnimationSpeed&255);
-                lastChangeTime = millis();
-                eepromCommitted = false;
-                }                
-              }
-             /*currentTime = millis();
-              if (currentTime - previousTime > 1000) {
-                String websocketStatusMessage = "H" + String(myHue) + ",S" + String(mySaturation) + ",V" + String(myValue);
-                webSocket.broadcastTXT(websocketStatusMessage);
-                previousTime = currentTime;
-               }*/
+              changeAnimationSpeed(xVal.toInt());  
+             }
             break;
             }
         case WStype_BIN:
