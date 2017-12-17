@@ -7,7 +7,7 @@ Maybe somebody with some experience can add some CSS code to the website to make
 ![Screenshot](screenshot.png)
 
 
-##basic usage
+## Basic usage
 To use the program, make sure the following Arduino libraries are installed:
 * Fastled
 * Adafruit Neopixel 
@@ -34,7 +34,7 @@ The website shown to the user uses a websocket to send data to the ESP module. T
 ## RGBW strip support
 I used my own way of hacking support into the firmware for the SK6812 led, which is a real nice RGBWW led with the white leds also individually adressable. Fastled has no support for this yet. The fastled library is used for all animations and calculations etcetera and the Adafruit Neopixel library is used to actually drive the leds. Which is a good enough compromise for now. The white leds of the strip are driven as one led, they can only be controlled by a seperate slider, so no calculating W from RGB, this is hard anyway because you have SK6812 leds with different color temperatures. But if anybody wants to use this anyway there is only one function where the code has to be changed.
 
-##TODO:
+## TODO:
 - Adding MQTT support so control via home automation is possible as well.
 
 

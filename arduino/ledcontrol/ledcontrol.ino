@@ -88,6 +88,7 @@ void setup() {
   //Websocket server
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
+  ledAnimationsSetup;
 }
 
 
@@ -100,6 +101,7 @@ void startSleepTimer(int value){
 int getSleepTimerRemainingTime(void){
   return (sleepTime-startTimeSleepTimer)/1000/60;
 }
+
 
 int getAnimationSpeed(void) {
   return myAnimationSpeed;

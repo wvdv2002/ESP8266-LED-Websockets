@@ -14,6 +14,12 @@ int diff;
 uint32_t currentBg = random(256);
 uint32_t nextBg = currentBg;
 
+// Palette definitions
+CRGBPalette16 currentPalette;
+CRGBPalette16 targetPalette;
+TBlendType    currentBlending;                                // NOBLEND or LINEARBLEND
+
+
 void ripple(void);
 void Fire2012(void);
 void cylon(void);
@@ -21,11 +27,16 @@ void rainbow(void);
 void ledsOff(void);
 void ledsSolid(void);
 void ledsCandle(void);
+void twinkle(void);
 
-#define AMOUNT_OF_ANIMATIONS 7
-SimplePatternList ledPatterns = {ledsOff,ledsSolid,ledsCandle,ripple, Fire2012, cylon, rainbow};       
-String ledPatternNamesList = "Off,Solid,Candle,Ripple,Fire,Cylon,Rainbow";
+#define AMOUNT_OF_ANIMATIONS 8
+SimplePatternList ledPatterns = {ledsOff,ledsSolid,ledsCandle,ripple, Fire2012, cylon, rainbow,twinkle};       
+String ledPatternNamesList = "Off,Solid,Candle,Ripple,Fire,Cylon,Rainbow,twinkle";
 
+void ledAnimationsSetup(void){
+    currentBlending = LINEARBLEND;  
+    
+}
 
 void one_color_allHSV(int ahue, int abright) {                // SET ALL LEDS TO ONE COLOR (HSV)
   for (int i = 0 ; i < NUM_LEDS; i++ ) {
@@ -58,6 +69,25 @@ void ledsCandle(void)
   }  
 }
 
+
+int twinkrate = 100;
+int thisfade = 8;
+int randhue = 1;
+
+void twinkle(void) {
+
+  if (random8() < twinkrate) leds[random16(NUM_LEDS)] += ColorFromPalette(currentPalette, (randhue ? random8() : myHue), 255, currentBlending);
+  fadeToBlackBy(leds, NUM_LEDS, thisfade);
+
+  EVERY_N_MILLISECONDS(100) {
+    uint8_t maxChanges = 24; 
+    nblendPaletteTowardPalette(currentPalette, targetPalette, maxChanges);   // AWESOME palette blending capability.
+  }
+  EVERY_N_SECONDS(5) {                                        // Change the target palette to a random one every 5 seconds.
+    static uint8_t baseC = random8();                         // You can use this as a baseline colour if you want similar hues in the next line.
+    targetPalette = CRGBPalette16(CHSV(random8(), 255, random8(128,255)), CHSV(random8(), 255, random8(128,255)), CHSV(random8(), 192, random8(128,255)), CHSV(random8(), 255, random8(128,255)));
+  }
+} // twinkle()
 
 void ledsSolid(void){
   ledSet = CHSV(myHue, mySaturation, myValue);  
