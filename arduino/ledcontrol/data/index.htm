@@ -2,8 +2,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <head>
 
+
+  <style>
+  div,fieldset,input,select{padding:5px;font-size:1em;}
+  input{width:100%;box-sizing:border-box;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;}
+  select{width:80%;}
+  textarea{resize:none;width:98%;height:318px;padding:5px;overflow:auto;}
+  body{text-align:center;font-family:verdana;}
+  td{padding:0px;}
+  button{border:0;border-radius:0.3rem;background-color:#1fa3ec;color:#fff;line-height:2.4rem;font-size:1.2rem;width:100%;-webkit-transition-duration:0.4s;transition-duration:0.4s;}
+  button:hover{background-color:#006cba;}
+  a{text-decoration:none;}
+  .p{float:left;text-align:left;}
+  .q{float:right;text-align:right;}
+  </style>
  
  </head>
+
+
+
  <body>LED Control:<br/><br/>
  <input type="text" id="ip" value="" onblur='mod()' /><br />
  <br />

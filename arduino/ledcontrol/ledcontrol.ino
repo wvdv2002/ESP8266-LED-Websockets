@@ -88,7 +88,8 @@ void setup() {
   //Websocket server
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
-  ledAnimationsSetup;
+  ledAnimationsSetup();
+  ledAnimationsSetSolidColor(CHSV(myHue,mySaturation,myValue));
 }
 
 
@@ -133,29 +134,11 @@ void loop() {
       inSleep = 0;
    }
   }
-  
-  EVERY_N_MILLISECONDS( myAnimationSpeed ) {
-   switch(myEffect){ //Override some led animation code here if necessary.
-      case 0: // Turn off all LEDs
-        whiteFadeToBlackBy(8);
-        ledSet.fadeToBlackBy(2);
-        break;
-      case 6: // loop through hues with all leds the same color. Can easily be changed to display a classic rainbow loop
-        rainbowHue = rainbowHue + 1;
-        ledSet = CHSV(rainbowHue, mySaturation, myValue);
-        break;
-      default: 
-        if(myEffect<AMOUNT_OF_ANIMATIONS){
-          ledPatterns[myEffect]();
-        }else{  //Generate  visual error if too high a number of animation is set.
-          ledSet = CRGB(0,255,0);
-        }
-      break;
-    }
-    putOnStrip();
-  }
-
-  
+  ledAnimationsChangedAnimation(myEffect);
+  //ledAnimationsChangedSpeed(myAnimationSpeed);
+  ledAnimationsLoop();
+  putOnStrip();
+    
   // EEPROM-commit and websocket broadcast -- they get called once if there has been a change 1 second ago and no further change since. This happens for performance reasons.
   currentChangeTime = millis();
   if (currentChangeTime - lastChangeTime > 5000 && eepromCommitted == false) {
@@ -181,7 +164,7 @@ void writeWhiteLedPWMIfChanged(int value)
 
 
 void changeLedAnimation(int animation){
-  flickerLed = random(0,NUM_LEDS-1); //Update flickerled position, hacky I know ;(
+//  flickerLed = random(0,NUM_LEDS-1); //Update flickerled position, hacky I know ;(
   if (myEffect != animation) {  // only do stuff when there was a change
     myEffect = animation;
     rainbowHue = myHue;
@@ -198,6 +181,7 @@ void changeHue(int hue){
     EEPROM.write(1, myHue);
     lastChangeTime = millis();
     eepromCommitted = false;
+    ledAnimationsSetSolidColor(CHSV(myHue,mySaturation,myValue));
   }
 }
 
@@ -207,6 +191,7 @@ void changeSaturation(int saturation){
     EEPROM.write(2, mySaturation);
     lastChangeTime = millis();
     eepromCommitted = false;
+    ledAnimationsSetSolidColor(CHSV(myHue,mySaturation,myValue));
   }
 }
 
@@ -226,6 +211,7 @@ void changeRGBIntensity(int value){
     EEPROM.write(3, myValue);
     lastChangeTime = millis();
     eepromCommitted = false;
+    ledAnimationsSetSolidColor(CHSV(myHue,mySaturation,myValue));
   }
 }
 
