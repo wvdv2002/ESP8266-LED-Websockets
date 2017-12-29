@@ -2,7 +2,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <head>
 
-
+<!--
   <style>
   div,fieldset,input,select{padding:5px;font-size:1em;}
   input{width:100%;box-sizing:border-box;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;}
@@ -16,14 +16,13 @@
   .p{float:left;text-align:left;}
   .q{float:right;text-align:right;}
   </style>
+ -->
  
  </head>
 
 
 
  <body>LED Control:<br/><br/>
- <input type="text" id="ip" value="" onblur='mod()' /><br />
- <br />
 
  <div id="patternButtons">
  
@@ -41,7 +40,10 @@
 	
   <input type="text" id="patterns" value=""/><br />
   <input type="text" id="msgESP" value=""/><br />
- </body>
+ <input type="text" id="ip" value="" onblur='mod()' /><br />
+ <br />
+
+  </body>
  <footer>
  <script>
 
@@ -92,7 +94,8 @@ function webEvent(evt) {
         		document.getElementById('V').value=evt.data.substring(evt.data.indexOf("V")+1,evt.data.indexOf(",W"));
                 document.getElementById('W').value=evt.data.substring(evt.data.indexOf("W")+1,evt.data.indexOf(",T"));
 			    document.getElementById('SPD').value=evt.data.substring(evt.data.indexOf("T")+1,evt.data.indexOf(",F"));
-				document.getElementById('sleepMinutes').value=(evt.data.substring(evt.data.indexOf("F")))/60;
+				document.getElementById('sleepMinutes').value=(evt.data.substring(evt.data.indexOf("F")+1));
+				document.getElementById('Sleep').value=(evt.data.substring(evt.data.indexOf("F")+1));
 				} 
 			else if (evt.data.substring(0,5)=="PROGS"){
 				var patternString = evt.data.substring(5)
