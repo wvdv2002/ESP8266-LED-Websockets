@@ -1,6 +1,7 @@
 # ESP8266-LED-Websockets
 Code for a ESP8266 controlled LED light with RGB + white SK2812 led strips.
 This code makes it controllable from any webbrowser, with the files hosted on the ESP8266. So no external server needed.
+Control via MQTT is also possible.
 The current LED color is persistent and survives a reboot.
 Maybe somebody with some experience can add some CSS code to the website to make it look somewhat nicer. For now it is very basic but functional.
 
@@ -34,14 +35,17 @@ The website shown to the user uses a websocket to send data to the ESP module. T
 ## RGBW strip support
 I used my own way of hacking support into the firmware for the SK6812 led, which is a real nice RGBWW led with the white leds also individually adressable. Fastled has no support for this yet. The fastled library is used for all animations and calculations etcetera and the Adafruit Neopixel library is used to actually drive the leds. Which is a good enough compromise for now. The white leds of the strip are driven as one led, they can only be controlled by a seperate slider, so no calculating W from RGB, this is hard anyway because you have SK6812 leds with different color temperatures. But if anybody wants to use this anyway there is only one function where the code has to be changed.
 
-##MQTT
+## MQTT
 There is basic MQTT support now as well. If you do not need MQTT, please comment out the #define USE_MQTT line in the ledcontrol.ino file.
 
 First you define the mqtt server and the topics in the MQTTServer.h file.
 At boot, the animationNames will be posted to the mqttAnimationNamesTopic.
 Every time the state of the settings changes, via websocket or MQTT, a new status message will be posted with a JSON string in the mqttStatTopic.
-``` "{"animation":1,"r":0,"g":31,"b":0,"h":96,"s":255,"v":88,"white":0,"speed":50,"sleep":28}```
+
+``` {"animation":1,"r":0,"g":31,"b":0,"h":96,"s":255,"v":88,"white":0,"speed":50,"sleep":28}```
+
 Commands can be send to the mqttCmdTopic path, for example "/livingroom/tree/cmd/hue".
+
 The following commands can be used:
 
 * hue: The brightness in HSB, value from 
