@@ -10,7 +10,7 @@
 
 #define DBG_OUTPUT_PORT Serial
 
-const char* pvhostname = "woodblock";
+const char* pvhostname = "tree";
 
 ESP8266WebServer server(80);
 //MDNSResponder mdns;

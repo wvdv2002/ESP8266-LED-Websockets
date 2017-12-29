@@ -1,7 +1,6 @@
 #include <ESP8266WiFi.h>
 #include <FastLED.h>
 #include <Adafruit_NeoPixel.h>
-#include <PubSubClient.h>
 
 #include <Hash.h>
 #include <EEPROM.h>
@@ -45,6 +44,8 @@ void changeRGBIntensity(int);
 void changeWhiteIntensity(int);
 void changeLedAnimation(int);
 void changeAnimationSpeed(int);
+void changeHSV(int,int,int);
+void changeRGB(int,int,int);
 
 bool eepromCommitted = true;      
 unsigned long lastChangeTime = 0;
@@ -55,6 +56,8 @@ bool inSleep = 0;
 
 #include "LEDanimations.h"
 #include "LEDWebsockets.h"
+#include "MQTTServer.h"
+
 int oldPWMValue = 9999;
 
 void setup() {
@@ -90,6 +93,7 @@ void setup() {
   webSocket.onEvent(webSocketEvent);
   ledAnimationsSetup();
   ledAnimationsSetSolidColor(CHSV(myHue,mySaturation,myValue));
+  mqttBegin();
 }
 
 
@@ -100,9 +104,12 @@ void startSleepTimer(int value){
 }
 
 int getSleepTimerRemainingTime(void){
-  return (sleepTime-startTimeSleepTimer)/1000/60;
+  if(inSleep==1){
+    return (sleepTime-(millis()-startTimeSleepTimer))/1000/60;
+  }else{
+    return 0;
+  }
 }
-
 
 int getAnimationSpeed(void) {
   return myAnimationSpeed;
@@ -123,6 +130,7 @@ void whiteFadeToBlackBy(int amount){
 
 void loop() {
   webSocket.loop();                           // handles websockets
+  mqttTask();
   settingsServerTask();
   if (myEffect!=0)
   {
@@ -149,6 +157,7 @@ void loop() {
     eepromCommitted = true;
     String aMessage = getStatusString();
     webSocket.broadcastTXT(aMessage); // Tell all connected clients which HSV values are running
+    mqttPostStatus();
   }
 }
 
@@ -165,6 +174,7 @@ void writeWhiteLedPWMIfChanged(int value)
 
 void changeLedAnimation(int animation){
 //  flickerLed = random(0,NUM_LEDS-1); //Update flickerled position, hacky I know ;(
+  disableSleepTimer();
   if (myEffect != animation) {  // only do stuff when there was a change
     myEffect = animation;
     rainbowHue = myHue;
@@ -172,6 +182,32 @@ void changeLedAnimation(int animation){
     lastChangeTime = millis();
     eepromCommitted = false;
   }
+}
+
+void changeHSV(int h, int s,int v){
+  if ((myHue != h) || (mySaturation != s) || (myValue!= v)) {
+    myHue = h;
+    rainbowHue = myHue;
+    mySaturation = s;
+    myValue = v;
+    EEPROM.write(1, myHue);
+    EEPROM.write(2, mySaturation);
+    EEPROM.write(3, myValue);
+    lastChangeTime = millis();
+    eepromCommitted = false;
+    ledAnimationsSetSolidColor(CHSV(myHue,mySaturation,myValue));
+  }  
+}
+
+void changeRGB(int r, int g, int b){
+  int h,s,v;
+  CRGB rgbColor;
+  CHSV hsvColor;
+  rgbColor.r = r;
+  rgbColor.g = g;
+  rgbColor.b = b;
+  hsvColor = rgb2hsv_approximate(rgbColor);
+  changeHSV(hsvColor.hue,hsvColor.sat,hsvColor.val);
 }
 
 void changeHue(int hue){

@@ -65,8 +65,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
                }
               }
              if (text.startsWith("a")) {
-               disableSleepTimer();
-               String xVal = (text.substring(text.indexOf("a") + 1, text.length()));
+                String xVal = (text.substring(text.indexOf("a") + 1, text.length()));
                 changeLedAnimation(xVal.toInt());
              }
              if (text.startsWith("b")) {
