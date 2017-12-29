@@ -1,17 +1,20 @@
+#ifdef USE_MQTT
 #include <PubSubClient.h>
 #include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
-WiFiClient EspClient;                     // Wifi Client
 
-PubSubClient mqttClient(EspClient);
+
+//Set these definitions.
 IPAddress mqttServerIp(192, 168, 1, 8);
-uint32_t reconnectTimeoutTimer;
-#define MQTT_MAX_PACKET_SIZE 512
-
 const char* mqttCmdTopic = "livingroom/tree/cmd/#";
 const char* mqttStatTopic = "livingroom/tree/state";
 const char* mqttAnimationNamesTopic = "livingroom/tree/animationNames";
 
+
+WiFiClient EspClient;                    
+PubSubClient mqttClient(EspClient);
+uint32_t reconnectTimeoutTimer;
+#define MQTT_MAX_PACKET_SIZE 512
 
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
   char dataBuf[length+1];
@@ -33,7 +36,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
    changeHue(aPayload.toInt());    
   }else if(aCmd=="saturation"){
    changeSaturation(aPayload.toInt());      
-  }else if(aCmd=="intensity"){
+  }else if(aCmd=="brightness"){
    changeRGBIntensity(aPayload.toInt());        
   }else if(aCmd=="white"){
    changeWhiteIntensity(aPayload.toInt());     
@@ -69,7 +72,7 @@ void mqttPostStatus(void){
   aStatus["white"] = myWhiteLedValue;
   aStatus["h"] = myHue;
   aStatus["s"] = mySaturation;
-  aStatus["v"] = myValue;
+  aStatus["b"] = myValue;
   aStatus["r"] = aColor.red;
   aStatus["g"] = aColor.green;
   aStatus["b"] = aColor.blue;
@@ -114,4 +117,9 @@ void mqttTask(){
   }
   mqttClient.loop();
 }
+#else
+void mqttTask(void){};
+void mqttBegin(void){};
+void mqttPostStatus(void){};
+#endif
 

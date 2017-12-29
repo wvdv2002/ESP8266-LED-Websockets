@@ -11,7 +11,7 @@
 #include <Hash.h>
 #include "SettingsServer.h"
 
-
+//#define USE_MQTT
 #define USE_SERIAL Serial
 // Wifi credentials
 

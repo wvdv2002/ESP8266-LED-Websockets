@@ -34,8 +34,29 @@ The website shown to the user uses a websocket to send data to the ESP module. T
 ## RGBW strip support
 I used my own way of hacking support into the firmware for the SK6812 led, which is a real nice RGBWW led with the white leds also individually adressable. Fastled has no support for this yet. The fastled library is used for all animations and calculations etcetera and the Adafruit Neopixel library is used to actually drive the leds. Which is a good enough compromise for now. The white leds of the strip are driven as one led, they can only be controlled by a seperate slider, so no calculating W from RGB, this is hard anyway because you have SK6812 leds with different color temperatures. But if anybody wants to use this anyway there is only one function where the code has to be changed.
 
+##MQTT
+There is basic MQTT support now as well. If you do not need MQTT, please comment out the #define USE_MQTT line in the ledcontrol.ino file.
+
+First you define the mqtt server and the topics in the MQTTServer.h file.
+At boot, the animationNames will be posted to the mqttAnimationNamesTopic.
+Every time the state of the settings changes, via websocket or MQTT, a new status message will be posted with a JSON string in the mqttStatTopic.
+``` "{"animation":1,"r":0,"g":31,"b":0,"h":96,"s":255,"v":88,"white":0,"speed":50,"sleep":28}```
+Commands can be send to the mqttCmdTopic path, for example "/livingroom/tree/cmd/hue".
+The following commands can be used:
+
+* hue: The brightness in HSB, value from 
+* saturation: The brightness in HSB, value from 0 to 255.
+* brightness: The brightness in HSB, value from 0 to 255.
+* sleep: The time until fading out all leds, value from 1 to 1000;
+* animation: The number of the animation to be selected (0 is off, 1 is solid, rest are animations).
+* speed: The speed of the animation (does not do much yet).
+* white: The intensity from 0-1023 of the white leds.
+* hsv: Comma seperated HSV values ("128,94,16").
+* rgb: Comma seperated RGB values ("128,128,128").
+
+
 ## TODO:
-- Adding MQTT support so control via home automation is possible as well.
+- Add config page to set settings instead of hard coding them.
 
 
 ##Development:
