@@ -11,7 +11,7 @@
 #include <Hash.h>
 #include "SettingsServer.h"
 
-//#define USE_MQTT
+#define USE_MQTT
 #define USE_SERIAL Serial
 // Wifi credentials
 
@@ -175,6 +175,7 @@ void writeWhiteLedPWMIfChanged(int value)
 void changeLedAnimation(int animation){
 //  flickerLed = random(0,NUM_LEDS-1); //Update flickerled position, hacky I know ;(
   disableSleepTimer();
+  if(animation>maxMode){animation=1;}
   if (myEffect != animation) {  // only do stuff when there was a change
     myEffect = animation;
     rainbowHue = myHue;
@@ -185,6 +186,9 @@ void changeLedAnimation(int animation){
 }
 
 void changeHSV(int h, int s,int v){
+  if(h>255){h=255;}
+  if(s>255){s=255;}
+  if(v>255){v=255;}
   if ((myHue != h) || (mySaturation != s) || (myValue!= v)) {
     myHue = h;
     rainbowHue = myHue;
@@ -200,6 +204,9 @@ void changeHSV(int h, int s,int v){
 }
 
 void changeRGB(int r, int g, int b){
+  if(r>255){r=255;}
+  if(g>255){g=255;}
+  if(b>255){b=255;}
   int h,s,v;
   CRGB rgbColor;
   CHSV hsvColor;
@@ -211,6 +218,7 @@ void changeRGB(int r, int g, int b){
 }
 
 void changeHue(int hue){
+  if(hue>255){hue=255;}
   if (myHue != hue) {
     myHue = hue;
     rainbowHue = myHue;
@@ -222,6 +230,7 @@ void changeHue(int hue){
 }
 
 void changeSaturation(int saturation){
+  if(saturation>255){saturation=255;}
   if (mySaturation != saturation) {
     mySaturation = saturation;
     EEPROM.write(2, mySaturation);
@@ -232,6 +241,7 @@ void changeSaturation(int saturation){
 }
 
 void changeWhiteIntensity(int value){
+  if(value>1023){value=1023;}
   if (myWhiteLedValue != value) {
     myWhiteLedValue = value;
     EEPROM.write(4, myWhiteLedValue&&255);
@@ -242,6 +252,7 @@ void changeWhiteIntensity(int value){
 }
 
 void changeRGBIntensity(int value){
+  if(value>255){value=255;}
   if (myValue != value) {
     myValue = value;
     EEPROM.write(3, myValue);

@@ -15,6 +15,7 @@ WiFiClient EspClient;
 PubSubClient mqttClient(EspClient);
 uint32_t reconnectTimeoutTimer;
 #define MQTT_MAX_PACKET_SIZE 512
+#define MQTT_IGNOREFIRSTCOMMANDS
 
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
   char dataBuf[length+1];
@@ -31,31 +32,39 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   Serial.print(aTopic);
   Serial.print("] ");
   Serial.println(aPayload);
-  
-  if(aCmd == "hue"){
-   changeHue(aPayload.toInt());    
-  }else if(aCmd=="saturation"){
-   changeSaturation(aPayload.toInt());      
-  }else if(aCmd=="brightness"){
-   changeRGBIntensity(aPayload.toInt());        
-  }else if(aCmd=="white"){
-   changeWhiteIntensity(aPayload.toInt());     
-  }else if(aCmd=="speed"){
-   changeAnimationSpeed(aPayload.toInt());
-  }else if(aCmd=="hsv"){
-    changeHSV(aPayload.substring(0,aPayload.indexOf(',')).toInt(),aPayload.substring(aPayload.indexOf(',')+1,aPayload.lastIndexOf(',')).toInt(),aPayload.substring(aPayload.lastIndexOf(',')+1).toInt());
-  }else if(aCmd=="rgb"){
-    changeRGB(aPayload.substring(0,aPayload.indexOf(',')).toInt(),aPayload.substring(aPayload.indexOf(',')+1,aPayload.lastIndexOf(',')).toInt(),aPayload.substring(aPayload.lastIndexOf(',')+1).toInt());
-  }else if(aCmd=="sleep"){
-   fVal = aPayload.toInt();
-   if (fVal != 0){
-    startSleepTimer(fVal);
-   }
-  }else if(aCmd=="animation"){
-    changeLedAnimation(aPayload.toInt());
+  if(length>0){
+    if(aCmd == "hue"){
+     changeHue(aPayload.toInt());    
+    }else if(aCmd=="saturation"){
+     changeSaturation(aPayload.toInt());      
+    }else if(aCmd=="value"){
+     changeRGBIntensity(aPayload.toInt());        
+    }else if(aCmd=="white"){
+     changeWhiteIntensity(aPayload.toInt());     
+    }else if(aCmd=="speed"){
+     changeAnimationSpeed(aPayload.toInt());
+    }else if(aCmd=="hsv"){
+      changeHSV(aPayload.substring(0,aPayload.indexOf(',')).toInt(),aPayload.substring(aPayload.indexOf(',')+1,aPayload.lastIndexOf(',')).toInt(),aPayload.substring(aPayload.lastIndexOf(',')+1).toInt());
+    }else if(aCmd=="rgb"){
+      changeRGB(aPayload.substring(0,aPayload.indexOf(',')).toInt(),aPayload.substring(aPayload.indexOf(',')+1,aPayload.lastIndexOf(',')).toInt(),aPayload.substring(aPayload.lastIndexOf(',')+1).toInt());
+    }else if(aCmd=="sleep"){
+     fVal = aPayload.toInt();
+     if (fVal != 0){
+      startSleepTimer(fVal);
+     }else{
+      disableSleepTimer();
+     }
+    }else if(aCmd=="animation"){
+      changeLedAnimation(aPayload.toInt());
+    }else{
+        Serial.println("Did not understand command");
+    }
   }else{
-      Serial.println("Did not understand command");
-  }    
+    Serial.println("Did not understand payload");
+  }
+
+   
+   
 }
 
 
@@ -72,7 +81,7 @@ void mqttPostStatus(void){
   aStatus["white"] = myWhiteLedValue;
   aStatus["h"] = myHue;
   aStatus["s"] = mySaturation;
-  aStatus["b"] = myValue;
+  aStatus["v"] = myValue;
   aStatus["r"] = aColor.red;
   aStatus["g"] = aColor.green;
   aStatus["b"] = aColor.blue;
