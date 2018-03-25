@@ -65,6 +65,8 @@ The following commands can be used:
 
 ## Development:
 While further developing the website, it might be usefull to know you can run the website in the data folder from a computer as well and let it connect to an ESP running the software, just open the file using any webbrowser, and add the following to the URL: ?ip=*IP*. This saves you from uploading the data folder while developing the website.
+Maybe somebody can also add the following animations:
+https://github.com/daterdots/LEDs
 
 This is still a WIP. The upload via Arduino IDE is broken...
 
