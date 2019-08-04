@@ -36,8 +36,8 @@
  * 
 */
 
-uint8_t maxMode = 40;                                         // Maximum number of modes.
-const char* ledPatternNamesList = "Off,Solid,White,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37";
+uint8_t maxMode = 41;                                         // Maximum number of modes.
+const char* ledPatternNamesList = "Off,Solid,White,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39";
 
 
 /*------------------------------------------------------------------------------------------
@@ -139,6 +139,8 @@ uint8_t currentPatternIndex = 0;                                // Index number 
 #include "serendipitous_pal.h"
 #include "three_sin_pal.h"
 #include "two_sin.h"
+#include "fire2012.h"
+
 
 
 void strobe_mode(uint8_t newMode, bool mc);
@@ -261,7 +263,8 @@ void strobe_mode(uint8_t newMode, bool mc){                   // mc stands for '
     case 37: if(mc) {thisdelay=20; targetPalette = ForestColors_p; thisinc=1; thishue=random8(255); thisfade=1; thisbright=255;} confetti_pal(); break;
     case 38: if(mc) {thisdelay=20; octaves=1; hue_octaves=2; hxy=6000; x=5000; xscale=3000; hue_scale=50; hue_speed=15; x_speed=100;} noise16_pal(); break;
     case 39: if(mc) {thisdelay=10; targetPalette = LavaColors_p; palchg=0;} noise8_pal(); break;
-
+    case 40: if(mc) {thisdelay=10; fill_solid(leds,NUM_LEDS,CHSV(50,50,0));}Fire2012();break;
+    case 41: if(mc) {thisdelay=10; fill_solid(leds,NUM_LEDS,CHSV(50,50,0));startindex=random(0,NUM_LEDS);} ledsCandle(); break;
   } // switch newMode
   
 } // strobe_mode()
