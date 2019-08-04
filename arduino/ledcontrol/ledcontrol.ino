@@ -25,7 +25,7 @@ extern "C" {
 #define BUTTON_EXTRA 5
 
 // Defining LED strip
-#define NUM_LEDS 240                 //Number of LEDs in your strip
+#define NUM_LEDS 60                 //Number of LEDs in your strip
 #define DATA_PIN 13                //Using WS2812B -- if you use APA102 or other 4-wire LEDs you need to also add a clock pin
 #define BRIGHTNESS 255
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, DATA_PIN, NEO_GRB + NEO_KHZ800);
@@ -74,7 +74,7 @@ void setup() {
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
   
-  analogWriteFreq(100);
+  analogWriteFreq(200);
   writeWhiteLedPWMIfChanged(0);  
   writeWhiteLedPWMIfChanged(1);  
 
