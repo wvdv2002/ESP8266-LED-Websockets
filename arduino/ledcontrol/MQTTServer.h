@@ -47,6 +47,10 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       changeHSV(aPayload.substring(0,aPayload.indexOf(',')).toInt(),aPayload.substring(aPayload.indexOf(',')+1,aPayload.lastIndexOf(',')).toInt(),aPayload.substring(aPayload.lastIndexOf(',')+1).toInt());
     }else if(aCmd=="rgb"){
       changeRGB(aPayload.substring(0,aPayload.indexOf(',')).toInt(),aPayload.substring(aPayload.indexOf(',')+1,aPayload.lastIndexOf(',')).toInt(),aPayload.substring(aPayload.lastIndexOf(',')+1).toInt());
+    }else if(aCmd=="demo"){
+      demorun = aPayload.toInt();
+    }else if(aCmd=="demotime"){
+      demotime = aPayload.toInt();
     }else if(aCmd=="sleep"){
      fVal = aPayload.toInt();
      if (fVal != 0){
@@ -131,4 +135,3 @@ void mqttTask(void){};
 void mqttBegin(void){};
 void mqttPostStatus(void){};
 #endif
-

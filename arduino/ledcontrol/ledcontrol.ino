@@ -19,6 +19,11 @@ extern "C" {
   #include "user_interface.h"
 }
 
+// Defining buttons
+#define BUTTON_OFF 13
+#define BUTTON_ON_NEXT 12
+#define BUTTON_EXTRA 5
+
 // Defining LED strip
 #define NUM_LEDS 240                 //Number of LEDs in your strip
 #define DATA_PIN 13                //Using WS2812B -- if you use APA102 or other 4-wire LEDs you need to also add a clock pin
@@ -34,7 +39,10 @@ byte myEffect = 1;                  //what animation/effect should be displayed
 byte myHue = 33;                    //I am using HSV, the initial settings display something like "warm white" color at the first start
 byte mySaturation = 168;
 byte myValue = 255;
+unsigned int newHue = 0;
+unsigned int newValue = 0;
 unsigned int myAnimationSpeed = 50;
+unsigned int myAnimationSpeedInput = 1;
 unsigned int myWhiteLedValue=0;
 byte rainbowHue = myHue;            //Using this so the rainbow effect doesn't overwrite the hue set on the website
 
@@ -50,6 +58,7 @@ void changeRGB(int,int,int);
 bool eepromCommitted = true;      
 unsigned long lastChangeTime = 0;
 unsigned long currentChangeTime = 0;
+unsigned long lastChangeButtonTime = 0;
 unsigned long startTimeSleepTimer = 0;
 unsigned long sleepTime = 0;
 bool inSleep = 0;
@@ -65,15 +74,20 @@ void setup() {
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
   
-  analogWriteFreq(200);
+  analogWriteFreq(100);
   writeWhiteLedPWMIfChanged(0);  
   writeWhiteLedPWMIfChanged(1);  
+
+  pinMode(BUTTON_OFF, INPUT_PULLUP);
+  pinMode(BUTTON_ON_NEXT, INPUT_PULLUP);
+  pinMode(BUTTON_EXTRA, INPUT_PULLUP);
+  
   EEPROM.begin(6);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
   Serial.begin(115200);
   Serial.println("Ledtest example");
 
   // Reading EEPROM
-  myEffect = 1;                         // Only read EEPROM for the myEffect variable after you're sure the animation you are testing won't break OTA updates, make your ESP restart etc. or you'll need to use the USB interface to update the module.
+  myEffect = 0;                         // Only read EEPROM for the myEffect variable after you're sure the animation you are testing won't break OTA updates, make your ESP restart etc. or you'll need to use the USB interface to update the module.
 //  myEffect = EEPROM.read(0); //blocking effects had a bad effect on the website hosting, without commenting this away even restarting would not help
   myHue = EEPROM.read(1);
   mySaturation = EEPROM.read(2);
@@ -142,8 +156,8 @@ void loop() {
       inSleep = 0;
    }
   }
-  ledAnimationsChangedAnimation(myEffect);
-  //ledAnimationsChangedSpeed(myAnimationSpeed);
+  //ledAnimationsChangedAnimation(myEffect);
+  //ledAnimationsChangedAnimationSpeed(myAnimationSpeed);
   ledAnimationsLoop();
   putOnStrip();
     
@@ -151,7 +165,7 @@ void loop() {
   currentChangeTime = millis();
   if (currentChangeTime - lastChangeTime > 5000 && eepromCommitted == false) {
      Serial.print("Heap free: ");  
-     Serial.println(system_get_free_heap_size());
+     Serial.print(system_get_free_heap_size());
 
     EEPROM.commit();
     eepromCommitted = true;
@@ -159,6 +173,39 @@ void loop() {
     webSocket.broadcastTXT(aMessage); // Tell all connected clients which HSV values are running
     mqttPostStatus();
   }
+
+  //if (digitalRead(BUTTON_OFF) < 1 && digitalRead(BUTTON_EXTRA) > 0) {
+   //   changeLedAnimation(0);
+   // Create double functionality for other buttons
+  //}
+  if (digitalRead(BUTTON_ON_NEXT) < 1 && currentChangeTime - lastChangeButtonTime > 1000) {
+      if (digitalRead(BUTTON_OFF) < 1) { changeLedAnimation(0); }
+      else {
+        if (myEffect == 0) { changeSaturation(250); }
+        changeLedAnimation(myEffect+1);
+      }
+      lastChangeButtonTime = millis();
+  } 
+  if (digitalRead(BUTTON_EXTRA) < 1 && currentChangeTime - lastChangeButtonTime > 350) {
+      if (myEffect > 2) {
+        if( myAnimationSpeedInput + 1 > 13 ) { myAnimationSpeedInput = 0; }
+        changeAnimationSpeed(myAnimationSpeedInput + 1);
+      } else if (myEffect == 2) {
+        if (myWhiteLedValue + 50 > 1023) { myWhiteLedValue = 23; }
+        changeWhiteIntensity(myWhiteLedValue + 50);
+      } else if (myEffect == 1 && digitalRead(BUTTON_OFF) < 1) {
+        //change hue
+        newHue = myHue + 10;
+        if (newHue > 255) { newHue = 0; }
+        changeHue(newHue);
+      } else if (myEffect == 1) {
+        //change intensity
+        newValue = myValue + 25;
+        if (newValue > 255) { newValue = 5; }
+        changeRGBIntensity(newValue);
+      }
+      lastChangeButtonTime = millis();      
+  } 
 }
 
 
@@ -172,13 +219,15 @@ void writeWhiteLedPWMIfChanged(int value)
   }
 }
 
-
 void changeLedAnimation(int animation){
 //  flickerLed = random(0,NUM_LEDS-1); //Update flickerled position, hacky I know ;(
   disableSleepTimer();
   if(animation>maxMode){animation=1;}
   if (myEffect != animation) {  // only do stuff when there was a change
     myEffect = animation;
+    Serial.print("\nNew Mode: ");  
+    Serial.print(animation);
+    ledAnimationsChangedAnimation(myEffect);
     rainbowHue = myHue;
     EEPROM.write(0, myEffect);       //stores the variable but needs to be committed to EEPROM before being saved - this happens in the loop
     lastChangeTime = millis();
@@ -223,6 +272,8 @@ void changeHue(int hue){
   if (myHue != hue) {
     myHue = hue;
     rainbowHue = myHue;
+    Serial.print("\nNew Hue: ");  
+    Serial.print(myHue);
     EEPROM.write(1, myHue);
     lastChangeTime = millis();
     eepromCommitted = false;
@@ -234,6 +285,8 @@ void changeSaturation(int saturation){
   if(saturation>255){saturation=255;}
   if (mySaturation != saturation) {
     mySaturation = saturation;
+    Serial.print("\nNew Saturation: ");  
+    Serial.print(mySaturation);
     EEPROM.write(2, mySaturation);
     lastChangeTime = millis();
     eepromCommitted = false;
@@ -245,6 +298,8 @@ void changeWhiteIntensity(int value){
   if(value>1023){value=1023;}
   if (myWhiteLedValue != value) {
     myWhiteLedValue = value;
+    Serial.print("\nNew White: ");  
+    Serial.print(myWhiteLedValue);
     EEPROM.write(4, myWhiteLedValue&&255);
     EEPROM.write(5, myWhiteLedValue/256);
     lastChangeTime = millis();
@@ -256,6 +311,8 @@ void changeRGBIntensity(int value){
   if(value>255){value=255;}
   if (myValue != value) {
     myValue = value;
+    Serial.print("\nNew Value: ");  
+    Serial.print(myValue);
     EEPROM.write(3, myValue);
     lastChangeTime = millis();
     eepromCommitted = false;
@@ -264,15 +321,21 @@ void changeRGBIntensity(int value){
 }
 
 void changeAnimationSpeed(int value){
-  if(value < 10){
-    value = 10;
+  if(value < 1){
+    value = 1;
   }
-  if(value > 255){
-    value = 255;
+  if(value > 13){
+    value = 13;
   }
+  myAnimationSpeedInput = value;
+  value = 14 - value;
+  value = value*value;
+  Serial.print("\nNew speed: ");  
+  Serial.print(value);
   if (myAnimationSpeed != value) {
     myAnimationSpeed = value;
     EEPROM.write(6, myAnimationSpeed&255);
+    ledAnimationsChangedAnimationSpeed(myAnimationSpeed);
     lastChangeTime = millis();
     eepromCommitted = false;
   }                
@@ -286,4 +349,3 @@ void putOnStrip(void){
   }
   strip.show();
 }
-
