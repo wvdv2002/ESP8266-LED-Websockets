@@ -14,6 +14,8 @@ const char* mqttAnimationNamesTopic = "livingroom/woodblock/animationNames";
 WiFiClient EspClient;                    
 PubSubClient mqttClient(EspClient);
 uint32_t reconnectTimeoutTimer;
+bool disableMQTT = 0;
+bool mqttConnectedAtLeastOnce = 0;
 #define MQTT_MAX_PACKET_SIZE 512
 #define MQTT_IGNOREFIRSTCOMMANDS
 
@@ -109,9 +111,14 @@ void reconnect() {
       mqttPostAnimationString();
       // ... and resubscribe
       mqttClient.subscribe(mqttCmdTopic);
+      mqttConnectedAtLeastOnce = 1;
     } else {
       Serial.print("failed, rc=");
       Serial.print(mqttClient.state());
+      if(!mqttConnectedAtLeastOnce){
+        disableMQTT = 1;
+        Serial.print("Disabled MQTT");
+      }
     }
   }
 }
@@ -124,11 +131,17 @@ void mqttBegin(){
 }
 
 void mqttTask(){
-    if (!mqttClient.connected() && (millis()-reconnectTimeoutTimer)>10000) {
-    reconnect();
-    reconnectTimeoutTimer = millis();
+  if(!disableMQTT){
+  if (!mqttClient.connected()){
+
+      if((millis()-reconnectTimeoutTimer)>10000) {
+        reconnect();
+        reconnectTimeoutTimer = millis();
+      }
+    }else{
+      mqttClient.loop();
+    }
   }
-  mqttClient.loop();
 }
 #else
 void mqttTask(void){};
