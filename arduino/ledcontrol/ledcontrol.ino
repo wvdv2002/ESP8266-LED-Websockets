@@ -35,7 +35,7 @@ CRGBSet ledSet(leds, NUM_LEDS);    //Trying LEDSet from FastLED
 void putOnStrip(void);
 
 //Some Variables
-byte myEffect = 1;                  //what animation/effect should be displayed
+byte myEffect = -1;                  //what animation/effect should be displayed
 byte myHue = 33;                    //I am using HSV, the initial settings display something like "warm white" color at the first start
 byte mySaturation = 168;
 byte myValue = 255;
@@ -87,12 +87,11 @@ void setup() {
   Serial.println("Ledtest example");
 
   // Reading EEPROM
-  myEffect = 0;                         // Only read EEPROM for the myEffect variable after you're sure the animation you are testing won't break OTA updates, make your ESP restart etc. or you'll need to use the USB interface to update the module.
-//  myEffect = EEPROM.read(0); //blocking effects had a bad effect on the website hosting, without commenting this away even restarting would not help
+  int startEffect = 1;                         // Only read EEPROM for the myEffect variable after you're sure the animation you are testing won't break OTA updates, make your ESP restart etc. or you'll need to use the USB interface to update the module.
+//int startEffect = EEPROM.read(0); //blocking effects had a bad effect on the website hosting, without commenting this away even restarting would not help
   myHue = EEPROM.read(1);
   mySaturation = EEPROM.read(2);
   myValue = EEPROM.read(3);
-
   ledSet = CHSV(0,100,100);
   putOnStrip();
   delay(100);                                         
@@ -108,6 +107,7 @@ void setup() {
   ledAnimationsSetup();
   ledAnimationsSetSolidColor(CHSV(myHue,mySaturation,myValue));
   mqttBegin();
+  changeLedAnimation(startEffect);
 }
 
 

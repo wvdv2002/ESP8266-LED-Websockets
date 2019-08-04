@@ -75,7 +75,7 @@ TBlendType    currentBlending;                                // NOBLEND or LINE
 
 CRGB currentSolid;
 
-uint8_t ledMode;                                              // Starting mode is typically 0.
+uint8_t ledMode = 0;                                              // Starting mode is typically 0.
 uint8_t demorun = 0;                                          // 0 = regular mode, 1 = demo mode, 2 = shuffle mode.
 uint8_t demotime = 10;                                        // Set the length of the demo timer.
 
