@@ -78,9 +78,9 @@ void setup() {
   writeWhiteLedPWMIfChanged(0);  
   writeWhiteLedPWMIfChanged(1);  
 
-  pinMode(BUTTON_OFF, INPUT_PULLUP);
-  pinMode(BUTTON_ON_NEXT, INPUT_PULLUP);
-  pinMode(BUTTON_EXTRA, INPUT_PULLUP);
+ // pinMode(BUTTON_OFF, INPUT_PULLUP);
+ // pinMode(BUTTON_ON_NEXT, INPUT_PULLUP);
+ // pinMode(BUTTON_EXTRA, INPUT_PULLUP);
   
   EEPROM.begin(7);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
   Serial.begin(115200);
@@ -173,7 +173,7 @@ void loop() {
     webSocket.broadcastTXT(aMessage); // Tell all connected clients which HSV values are running
     mqttPostStatus();
   }
-
+/*
   //if (digitalRead(BUTTON_OFF) < 1 && digitalRead(BUTTON_EXTRA) > 0) {
    //   changeLedAnimation(0);
    // Create double functionality for other buttons
@@ -205,7 +205,8 @@ void loop() {
         changeRGBIntensity(newValue);
       }
       lastChangeButtonTime = millis();      
-  } 
+  }
+  */ 
 }
 
 
