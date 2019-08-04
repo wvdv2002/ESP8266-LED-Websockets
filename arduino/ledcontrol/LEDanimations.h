@@ -264,7 +264,7 @@ void strobe_mode(uint8_t newMode, bool mc){                   // mc stands for '
     case 38: if(mc) {thisdelay=20; octaves=1; hue_octaves=2; hxy=6000; x=5000; xscale=3000; hue_scale=50; hue_speed=15; x_speed=100;} noise16_pal(); break;
     case 39: if(mc) {thisdelay=10; targetPalette = LavaColors_p; palchg=0;} noise8_pal(); break;
     case 40: if(mc) {thisdelay=10; fill_solid(leds,NUM_LEDS,CHSV(50,50,0));}Fire2012();break;
-    case 41: if(mc) {thisdelay=10; fill_solid(leds,NUM_LEDS,CHSV(50,50,0));startindex=random(0,NUM_LEDS);} ledsCandle(); break;
+    case 41: if(mc) {thisdelay=4; startindex=random(0,NUM_LEDS-1);} ledsCandle(); break;
   } // switch newMode
   
 } // strobe_mode()

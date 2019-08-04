@@ -25,8 +25,8 @@ extern "C" {
 #define BUTTON_EXTRA 5
 
 // Defining LED strip
-#define NUM_LEDS 120                 //Number of LEDs in your strip
-#define DATA_PIN 4               //Using WS2812B -- if you use APA102 or other 4-wire LEDs you need to also add a clock pin
+#define NUM_LEDS 60                 //Number of LEDs in your strip
+#define DATA_PIN 13                //Using WS2812B -- if you use APA102 or other 4-wire LEDs you need to also add a clock pin
 #define BRIGHTNESS 255
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, DATA_PIN, NEO_GRB + NEO_KHZ800);
 
@@ -52,6 +52,7 @@ void changeRGBIntensity(int);
 void changeWhiteIntensity(int);
 void changeLedAnimation(int);
 void changeAnimationSpeed(int);
+void changeAnimationButtonSpeed();
 void changeHSV(int,int,int);
 void changeRGB(int,int,int);
 
@@ -74,13 +75,13 @@ void setup() {
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
   
-  analogWriteFreq(100);
+  analogWriteFreq(200);
   writeWhiteLedPWMIfChanged(0);  
   writeWhiteLedPWMIfChanged(1);  
 
-  pinMode(BUTTON_OFF, INPUT_PULLUP);
-  pinMode(BUTTON_ON_NEXT, INPUT_PULLUP);
-  pinMode(BUTTON_EXTRA, INPUT_PULLUP);
+ // pinMode(BUTTON_OFF, INPUT_PULLUP);
+ // pinMode(BUTTON_ON_NEXT, INPUT_PULLUP);
+ // pinMode(BUTTON_EXTRA, INPUT_PULLUP);
   
   EEPROM.begin(7);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
   Serial.begin(115200);
@@ -152,7 +153,7 @@ void loop() {
   }
   if(inSleep == 1){
     if (millis()-startTimeSleepTimer>sleepTime){
-      myEffect = 0;
+      ledAnimationsChangedAnimation(0);
       inSleep = 0;
    }
   }
@@ -173,7 +174,7 @@ void loop() {
     webSocket.broadcastTXT(aMessage); // Tell all connected clients which HSV values are running
     mqttPostStatus();
   }
-
+/*
   //if (digitalRead(BUTTON_OFF) < 1 && digitalRead(BUTTON_EXTRA) > 0) {
    //   changeLedAnimation(0);
    // Create double functionality for other buttons
@@ -188,8 +189,7 @@ void loop() {
   } 
   if (digitalRead(BUTTON_EXTRA) < 1 && currentChangeTime - lastChangeButtonTime > 350) {
       if (myEffect > 2) {
-        if( myAnimationSpeedInput + 1 > 13 ) { myAnimationSpeedInput = 0; }
-        changeAnimationSpeed(myAnimationSpeedInput + 1);
+        changeAnimationButtonSpeed();
       } else if (myEffect == 2) {
         if (myWhiteLedValue + 50 > 1023) { myWhiteLedValue = 23; }
         changeWhiteIntensity(myWhiteLedValue + 50);
@@ -205,7 +205,8 @@ void loop() {
         changeRGBIntensity(newValue);
       }
       lastChangeButtonTime = millis();      
-  } 
+  }
+  */ 
 }
 
 
@@ -214,13 +215,15 @@ void writeWhiteLedPWMIfChanged(int value)
   if (oldPWMValue != value)
   {
     oldPWMValue = value;
-    putOnStrip();
-    //analogWrite(12,oldPWMValue);
+    analogWrite(0,oldPWMValue);
+//    putOnStrip();
   }
 }
 
 void changeLedAnimation(int animation){
-//  flickerLed = random(0,NUM_LEDS-1); //Update flickerled position, hacky I know ;(
+  if(animation==41){
+    startindex = random(0,NUM_LEDS-1); //Update flickerled position, hacky I know ;(
+  }
   disableSleepTimer();
   if(animation>maxMode){animation=1;}
   if (myEffect != animation) {  // only do stuff when there was a change
@@ -320,16 +323,18 @@ void changeRGBIntensity(int value){
   }
 }
 
+void changeAnimationButtonSpeed(){
+  if(++myAnimationSpeedInput>13){
+    myAnimationSpeedInput = 1;
+  }
+
+  if(myAnimationSpeedInput < 1){
+    myAnimationSpeedInput = 1;
+  }
+  changeAnimationSpeed(myAnimationSpeedInput*myAnimationSpeedInput);  
+}
+
 void changeAnimationSpeed(int value){
-  if(value < 1){
-    value = 1;
-  }
-  if(value > 13){
-    value = 13;
-  }
-  myAnimationSpeedInput = value;
-  value = 14 - value;
-  value = value*value;
   Serial.print("\nNew speed: ");  
   Serial.print(value);
   if (myAnimationSpeed != value) {
@@ -345,8 +350,7 @@ void putOnStrip(void){
   uint8_t pwmTemp=oldPWMValue/4;
   for(int i=0;i<strip.numPixels();i++)
   {
-    //strip.setPixelColor(i,leds[i].r,leds[i].g,leds[i].b,pwmTemp);  
-    strip.setPixelColor(i,leds[i].r,leds[i].g,leds[i].b);
+    strip.setPixelColor(i,leds[i].r,leds[i].g,leds[i].b);  
   }
   strip.show();
 }

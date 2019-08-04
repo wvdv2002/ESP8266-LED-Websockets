@@ -2,20 +2,17 @@
 
 void ledsCandle(void)
 {
-  static int flickerTime = 200;
 
   static int flickerValue = 110;
   static int flickerHue = 33;
-  static unsigned long currentTime = 0;
-  static unsigned long previousTime = 0;
-  currentTime = millis();
+  static int flickerSkip = 0;
+  ledSet.fadeToBlackBy(1);
   leds[startindex] = CHSV(flickerHue, 255, flickerValue);
-  if (currentTime - previousTime > flickerTime) {
+  if(flickerSkip--<0){
     flickerValue = 110 + random(-10, +10); //70 works best
-    flickerHue = 33; //random(33, 34);
-    previousTime = currentTime;
-    flickerTime = random(150, 500);
-  }  
+    flickerHue = random(33, 34);
+    flickerSkip = random(12, 40);
+  }
 }
 
 #define COOLING 100
