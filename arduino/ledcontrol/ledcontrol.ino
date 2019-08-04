@@ -21,9 +21,9 @@ extern "C" {
 
 // Defining LED strip
 #define NUM_LEDS 240                 //Number of LEDs in your strip
-#define DATA_PIN 15                //Using WS2812B -- if you use APA102 or other 4-wire LEDs you need to also add a clock pin
+#define DATA_PIN 13                //Using WS2812B -- if you use APA102 or other 4-wire LEDs you need to also add a clock pin
 #define BRIGHTNESS 255
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, DATA_PIN, NEO_GRBW + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, DATA_PIN, NEO_GRB + NEO_KHZ800);
 
 CRGB leds[NUM_LEDS];
 CRGBSet ledSet(leds, NUM_LEDS);    //Trying LEDSet from FastLED
@@ -167,7 +167,8 @@ void writeWhiteLedPWMIfChanged(int value)
   if (oldPWMValue != value)
   {
     oldPWMValue = value;
-    putOnStrip();
+    analogWrite(0,oldPWMValue);
+//    putOnStrip();
   }
 }
 
@@ -281,7 +282,7 @@ void putOnStrip(void){
   uint8_t pwmTemp=oldPWMValue/4;
   for(int i=0;i<strip.numPixels();i++)
   {
-    strip.setPixelColor(i,leds[i].r,leds[i].g,leds[i].b,pwmTemp);  
+    strip.setPixelColor(i,leds[i].r,leds[i].g,leds[i].b);  
   }
   strip.show();
 }
