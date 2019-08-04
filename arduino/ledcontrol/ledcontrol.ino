@@ -82,7 +82,7 @@ void setup() {
   pinMode(BUTTON_ON_NEXT, INPUT_PULLUP);
   pinMode(BUTTON_EXTRA, INPUT_PULLUP);
   
-  EEPROM.begin(6);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
+  EEPROM.begin(7);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
   Serial.begin(115200);
   Serial.println("Ledtest example");
 
