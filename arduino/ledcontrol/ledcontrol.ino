@@ -25,10 +25,10 @@ extern "C" {
 #define BUTTON_EXTRA 5
 
 // Defining LED strip
-#define NUM_LEDS 60                 //Number of LEDs in your strip
-#define DATA_PIN 13                //Using WS2812B -- if you use APA102 or other 4-wire LEDs you need to also add a clock pin
+#define NUM_LEDS 72                //Number of LEDs in your strip
+#define DATA_PIN 4                //Using WS2812B -- if you use APA102 or other 4-wire LEDs you need to also add a clock pin
 #define BRIGHTNESS 255
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, DATA_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, DATA_PIN, NEO_GRBW + NEO_KHZ800);
 
 CRGB leds[NUM_LEDS];
 CRGBSet ledSet(leds, NUM_LEDS);    //Trying LEDSet from FastLED
@@ -75,13 +75,13 @@ void setup() {
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
   
-  analogWriteFreq(200);
-  writeWhiteLedPWMIfChanged(0);  
-  writeWhiteLedPWMIfChanged(1);  
+  //analogWriteFreq(200);
+  //writeWhiteLedPWMIfChanged(0);  
+  //writeWhiteLedPWMIfChanged(1);  
 
- // pinMode(BUTTON_OFF, INPUT_PULLUP);
- // pinMode(BUTTON_ON_NEXT, INPUT_PULLUP);
- // pinMode(BUTTON_EXTRA, INPUT_PULLUP);
+  pinMode(BUTTON_OFF, INPUT_PULLUP);
+  pinMode(BUTTON_ON_NEXT, INPUT_PULLUP);
+  pinMode(BUTTON_EXTRA, INPUT_PULLUP);
   
   EEPROM.begin(7);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
   Serial.begin(115200);
@@ -174,7 +174,7 @@ void loop() {
     webSocket.broadcastTXT(aMessage); // Tell all connected clients which HSV values are running
     mqttPostStatus();
   }
-/*
+
   //if (digitalRead(BUTTON_OFF) < 1 && digitalRead(BUTTON_EXTRA) > 0) {
    //   changeLedAnimation(0);
    // Create double functionality for other buttons
@@ -206,7 +206,7 @@ void loop() {
       }
       lastChangeButtonTime = millis();      
   }
-  */ 
+  
 }
 
 
@@ -215,8 +215,8 @@ void writeWhiteLedPWMIfChanged(int value)
   if (oldPWMValue != value)
   {
     oldPWMValue = value;
-    analogWrite(0,oldPWMValue);
-//    putOnStrip();
+    //analogWrite(0,oldPWMValue);
+    putOnStrip();
   }
 }
 
@@ -350,7 +350,7 @@ void putOnStrip(void){
   uint8_t pwmTemp=oldPWMValue/4;
   for(int i=0;i<strip.numPixels();i++)
   {
-    strip.setPixelColor(i,leds[i].r,leds[i].g,leds[i].b);  
+    strip.setPixelColor(i,leds[i].r,leds[i].g,leds[i].b, pwmTemp);  
   }
   strip.show();
 }
