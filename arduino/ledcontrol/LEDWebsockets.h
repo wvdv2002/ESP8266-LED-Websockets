@@ -86,10 +86,16 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
                String xVal = (text.substring(text.indexOf("e") + 1, text.length()));
                changeWhiteIntensity(xVal.toInt());
              }
-             if (text.startsWith("t")) {
-               String xVal = (text.substring(text.indexOf("t") + 1, text.length()));
+             if (text.startsWith("s")) {
+               String xVal = (text.substring(text.indexOf("s") + 1, text.length()));
                changeAnimationSpeed(xVal.toInt());  
              }
+             //restart
+             if (text.startsWith("restart")) {
+               delay(600);
+               ESP.reset();
+             }
+             //save mqtt ip to eeprom
              if (text.startsWith("m")) {
                String strIP = (text.substring(text.indexOf("m") + 1, text.length()));
                int Parts[4] = {0,0,0,0};
@@ -113,6 +119,40 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
                eepromCommitted = false;  
                Serial.print("\nSetting new mqtt ip");
              }
+             //save mqtt port to EEPROM
+             if (text.startsWith("p")) {
+               String strPORT = (text.substring(text.indexOf("p") + 1, text.length()));
+               int port = strPORT.toInt();
+               uint8_t xlow = port & 0xff;
+               uint8_t xhigh = (port >> 8);
+               EEPROM.write(11, xhigh);
+               EEPROM.write(12, xlow);
+               eepromCommitted = false;  
+               Serial.print("\nSetting new mqtt port");
+             }
+             //save mqtt topic to EEPROM (max 15 chars)
+             if (text.startsWith("t")) {
+              //write to eeprom
+              String Topic = (text.substring(text.indexOf("t") + 1, text.length()));
+              int charLength=Topic.length();
+              int l = Topic.length();
+              if (l > 15) { l = 15; }
+ 
+              Serial.println("\nwriting eeprom mqtt topic:");
+              for (int i = 0; i < l; ++i)
+              {
+                EEPROM.write(13+i, Topic[i]);
+                Serial.print("Wrote: ");
+                Serial.println(Topic[i]);
+              }
+              String a = "+";
+              for (int i = l; i<15; ++i) {
+                EEPROM.write(13+i, a[0]);
+                Serial.println("Wrote: +");
+              }
+              eepromCommitted = false; 
+
+            }
             break;
             }
         case WStype_BIN:

@@ -27,21 +27,27 @@
  <div id="patternButtons">
  
  </div> <br/><br/>
- 
- 
  H: <input id="H" type="range" min="0" max="255" step="1" oninput="ledHue(this.value);"/><br/>
  S: <input id="S" type="range" min="0" max="255" step="1" oninput="ledSaturation(this.value);"/><br/>
  V: <input id="V" type="range" min="0" max="255" step="1" oninput="ledValue(this.value);" /><br/>
  W: <input id="W" type="range" min="0" max="1023" step="1" oninput="whiteLedValue(this.value);" /><br/> <br />
  Spd: <input id="SPD" type="range" min="0" max="100" step="1" oninput="animationSpeedSet(this.value);" /><br/> <br />
  <button onclick="sleepTime(document.getElementById('sleepMinutes').value);">Sleep</button>: <input type="text" size="4" id="sleepMinutes" value="60"/><br /><br />
-  
  <input id="Sleep" oninput="document.getElementById('sleepMinutes').value=this.value;" type="range" min="1" max="120" step="1" value="60"/><br/><br />
 	
+ Device ip-address (for socket connection):
+ <input type="text" id="ip" value=""/><button onclick='mod()'>Connect</button><br />
+ Change the mqtt ip-address:
+ <input type="text" id="mqttip" value="" onblur='sendMqttIp()' /><button onclick='sendMqttIp()'>Set</button><br />
+ Change the mqtt port (default 1883, max 16bits):
+ <input type="text" id="mqttport" value="1883" /><button onclick='sendMqttPort()'>Set</button><br />
+ Change the mqtt topic (max 15 characters):
+ <input type="text" id="mqtttopic" value="" /><button onclick='sendMqttTopic()'>Set</button><br />
+ <br><br>Debug patterns:
  <input type="text" id="patterns" value=""/><br />
+ ESP message:
  <input type="text" id="msgESP" value=""/><br />
- <input type="text" id="ip" value="" onblur='mod()' /><br />
- <input type="text" id="mqttip" value="" onblur='sendMqttIp()' /><br />
+ <button onclick='sendRestart()'>Restart ESP</button>
  <br />
 
   </body>
@@ -52,22 +58,38 @@
 var ipValue;
 var connection;
 var patterns = [];
-function mod(){
-var text = document.getElementById('ip').value;
-ipValue = text;	
-if(connection){connection.close();}
-connection = new WebSocket(ipValue, ['arduino']); 
-connection.onopen = function () {  console.log('Connected');};
-connection.onerror = function (error) {console.log('WebSocket Error ',error);};
-connection.onmessage = function (msg) {webEvent(msg);};
-console.log(text)
-console.log("IP value changed to:"+ipValue);
+function mod() {
+    
+    var text = document.getElementById('ip').value;
+    text = "ws://"+text+":81/";
+    ipValue = text;	
+    if(connection){connection.close();}
+    connection = new WebSocket(ipValue, ['arduino']); 
+    connection.onopen = function () {  console.log('Connected');};
+    connection.onerror = function (error) {console.log('WebSocket Error ',error);};
+    connection.onmessage = function (msg) {webEvent(msg);};
+    console.log(text)
+    console.log("IP value changed to:"+ipValue);
 }
 
 function sendMqttIp() {
     var text = document.getElementById('mqttip').value;    
     connection.send("m"+text)
 }	
+
+function sendMqttTopic() {
+    var text = document.getElementById('mqtttopic').value;    
+    connection.send("t"+text)
+}	
+
+function sendMqttPort() {
+    var text = document.getElementById('mqttport').value;    
+    connection.send("p"+text)
+}
+
+function sendRestart() {
+    connection.send("restart")
+}
 
 function sleepTime(newValue) {
 	connection.send("f"+newValue*60); 
@@ -86,7 +108,7 @@ function whiteLedValue(newValue) {
 	connection.send("e"+newValue); 
 };
 function animationSpeedSet(newValue){
-	connection.send("t"+newValue)
+	connection.send("s"+newValue)
 }
 function selectAnimation(aPattern){
 	connection.send("a"+aPattern.substring(3))
@@ -113,6 +135,7 @@ function webEvent(evt) {
 }
 
 function createPatternButtons(aListOfPatterns){
+    document.getElementById('patternButtons').innerHTML = "";
 	var btn;
 	var textbtn;
 	patterns = aListOfPatterns
@@ -124,9 +147,6 @@ function createPatternButtons(aListOfPatterns){
 		btn.addEventListener("click",function(){selectAnimation(this.id)},false)
 		document.getElementById('patternButtons').appendChild(btn)
 		document.getElementById('patternButtons').appendChild(document.createTextNode(" "))
-		
-
-		
 	}
 }
 
@@ -139,14 +159,17 @@ function getParameterByName(name, url) {
     if (!results[2]) return '';
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
+
  
  var ipPath = getParameterByName('ip');
  console.log("path=" + ipPath)
  if(ipPath===null){
 		ipPath = location.hostname
+} else {
+    document.getElementById('ip').value = ipPath
 }
  console.log("path=" + ipPath)
- document.getElementById('ip').value = "ws://"+ipPath+":81/";
+ 
  mod();
  </script>
  </footer>
