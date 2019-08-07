@@ -83,7 +83,7 @@ void setup() {
  // pinMode(BUTTON_ON_NEXT, INPUT_PULLUP);
  // pinMode(BUTTON_EXTRA, INPUT_PULLUP);
   
-  EEPROM.begin(11);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
+  EEPROM.begin(27);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
   /*  0 = myEffect
    *  1 = myHue
    *  2 = mySaturation 
@@ -120,6 +120,9 @@ void setup() {
   ledAnimationsSetup();
   ledAnimationsSetSolidColor(CHSV(myHue,mySaturation,myValue));
   mqttBegin();
+  fill_solid(leds,NUM_LEDS,CHSV(50,50,0));
+  myWhiteLedValue = 0;
+  putOnStrip();
   changeLedAnimation(startEffect);
 }
 
