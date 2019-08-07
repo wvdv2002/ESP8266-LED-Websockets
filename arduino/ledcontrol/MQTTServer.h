@@ -7,9 +7,9 @@
 //Set these definitions.
 //IPAddress mqttServerIp(192, 168, 1, 4);
 IPAddress mqttServerIp;
-const char* mqttCmdTopic = "livingroom/tree/cmd/#";
-const char* mqttStatTopic = "livingroom/tree/state";
-const char* mqttAnimationNamesTopic = "livingroom/tree/animationNames";
+const char* mqttCmdTopic = "woodblock/cmd/#";
+const char* mqttStatTopic = "woodblock/state";
+const char* mqttAnimationNamesTopic = "woodblock/animationNames";
 
 
 WiFiClient EspClient;                    
