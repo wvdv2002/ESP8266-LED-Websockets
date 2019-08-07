@@ -1,5 +1,6 @@
 /* Based on the websocket example and 
 the code here http://www.whatimade.today/esp8266-on-websockets-mdns-ota-and-leds/ */
+#include <EEPROM.h>
 
 WebSocketsServer webSocket = WebSocketsServer(81);
 extern void startSleepTimer(int);
@@ -57,6 +58,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
             // webSocket.broadcastTXT("message here");
 
             String text = String((char *) &payload[0]);
+            Serial.print("\n" + text);
              if (text.startsWith("f")) {
                String fStrVal = (text.substring(text.indexOf("f") + 1, text.length()));
                int fVal = fStrVal.toInt();
@@ -72,21 +74,44 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
                String xVal = (text.substring(text.indexOf("b") + 1, text.length()));
                 changeHue(xVal.toInt());
              }
-              if (text.startsWith("c")) {
+             if (text.startsWith("c")) {
                String xVal = (text.substring(text.indexOf("c") + 1, text.length()));
                changeSaturation(xVal.toInt());
                }
-              if (text.startsWith("d")) {
+             if (text.startsWith("d")) {
                String xVal = (text.substring(text.indexOf("d") + 1, text.length()));
-                changeRGBIntensity(xVal.toInt());
+               changeRGBIntensity(xVal.toInt());
              }
-              if (text.startsWith("e")) {
+             if (text.startsWith("e")) {
                String xVal = (text.substring(text.indexOf("e") + 1, text.length()));
-                changeWhiteIntensity(xVal.toInt());
+               changeWhiteIntensity(xVal.toInt());
              }
-              if (text.startsWith("t")) {
+             if (text.startsWith("t")) {
                String xVal = (text.substring(text.indexOf("t") + 1, text.length()));
-              changeAnimationSpeed(xVal.toInt());  
+               changeAnimationSpeed(xVal.toInt());  
+             }
+             if (text.startsWith("m")) {
+               String strIP = (text.substring(text.indexOf("m") + 1, text.length()));
+               int Parts[4] = {0,0,0,0};
+                int Part = 0;
+                for ( int i=0; i<strIP.length(); i++ )
+                {
+                 char c = strIP[i];
+                  if ( c == '.' )
+                  {
+                    Part++;
+                    continue;
+                  }
+                  Parts[Part] *= 10;
+                  Parts[Part] += c - '0';
+                }
+                IPAddress ip( Parts[0], Parts[1], Parts[2], Parts[3] );
+               EEPROM.write(7, Parts[0]);
+               EEPROM.write(8, Parts[1]);
+               EEPROM.write(9, Parts[2]);
+               EEPROM.write(10, Parts[3]);
+               eepromCommitted = false;  
+               Serial.print("\nSetting new mqtt ip");
              }
             break;
             }

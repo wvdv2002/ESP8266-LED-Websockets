@@ -17,6 +17,7 @@ ESP8266WebServer server(80);
 ESP8266HTTPUpdateServer httpUpdater;
 
 void showWifiConfigAPMessage(void);
+void changeWhiteIntensity(int);
 
 void handle_root(){
   server.send(200, "text/plain", "Woodblock lighting");
@@ -114,25 +115,12 @@ void handle_wifisetup(void){
     ESP.reset();
 }
 
-void handle_brightness(void)
-{
-    String aStr = server.arg("brightness");
-    int brightness = aStr.toInt();
-    if ((brightness >= 0) && (brightness <= 100))
-    {
-      analogWrite(0,brightness);
-    }
-    server.send(200, "text/plain", "brightness set");
-}
-
-
 void handle_reboot(void)
 {
   server.send(200, "text/plain", "restarting.......");
   delay(600);
   ESP.reset();
 }
-   
 
 void startSettingsServer(void){
     SPIFFS.begin();
@@ -153,7 +141,6 @@ void startSettingsServer(void){
   server.on("/refresh", handle_refresh);
   server.on("/wifisetup",handle_wifisetup);
   server.on("/reboot", handle_reboot);
-  server.on("/brightness",handle_brightness);
    //list directory
   server.on("/list", HTTP_GET, handleFileList);
   server.on("/description.xml", HTTP_GET, [](){ //SSDP server added
@@ -215,6 +202,3 @@ void setupWiFi(void){
   Serial.println(WiFi.subnetMask());
 
 }
-
-
-

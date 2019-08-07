@@ -5,7 +5,8 @@
 
 
 //Set these definitions.
-IPAddress mqttServerIp(192, 168, 1, 4);
+//IPAddress mqttServerIp(192, 168, 1, 4);
+IPAddress mqttServerIp;
 const char* mqttCmdTopic = "livingroom/tree/cmd/#";
 const char* mqttStatTopic = "livingroom/tree/state";
 const char* mqttAnimationNamesTopic = "livingroom/tree/animationNames";
@@ -126,8 +127,14 @@ void reconnect() {
 
 
 void mqttBegin(){
+   IPAddress mqttServerIp(EEPROM.read(7), EEPROM.read(8), EEPROM.read(9), EEPROM.read(10));
+   Serial.print("Using ip: ");
+   Serial.print(EEPROM.read(7));
+   Serial.print(EEPROM.read(8));
+   Serial.print(EEPROM.read(9));
+   Serial.print(EEPROM.read(10));
    mqttClient.setServer(mqttServerIp, 1883);
-  mqttClient.setCallback(mqttCallback);
+   mqttClient.setCallback(mqttCallback);
 }
 
 void mqttTask(){
