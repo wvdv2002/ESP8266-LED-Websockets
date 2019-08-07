@@ -95,6 +95,9 @@ void setup() {
    *  8 = second digit mqtt ip
    *  9 = third digit mqtt ip
    *  10 = fourth digit mqtt ip
+   *  11 = mqtt port msbs
+   *  12 = mqtt port lsbs
+   *  13-26 = Mqtt main topic
    */
   Serial.begin(115200);
   Serial.println("Ledtest example");
