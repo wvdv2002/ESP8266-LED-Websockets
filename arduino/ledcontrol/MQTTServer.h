@@ -12,6 +12,7 @@ IPAddress mqttServerIp;
 //const char* mqttStatTopic = "woodblock/state";
 //const char* mqttAnimationNamesTopic = "woodblock/animationNames";
 const char* a = "+";
+const char* b = "/#";
 
 String mqttCmdTopic = "woodblock/cmd/#";
 String mqttStatTopic = "woodblock/state";
@@ -36,7 +37,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   aCmd.toLowerCase();
   aCmd.trim();
   
-  Serial.print("Message arrived [");
+  Serial.print("\nMessage arrived [");
   Serial.print(aTopic);
   Serial.print("] ");
   Serial.println(aPayload);
@@ -112,7 +113,7 @@ void mqttPostAnimationString(void){
 void reconnect() {
   // Loop until we're reconnected
   if(!mqttClient.connected()) {
-    Serial.print("Attempting MQTT connection...");
+    Serial.print("\nAttempting MQTT connection...");
     // Attempt to connect
     if (mqttClient.connect(pvhostname)) {
       Serial.println("connected");
@@ -122,6 +123,10 @@ void reconnect() {
       // ... and resubscribe
       char c[mqttCmdTopic.length()];
       mqttCmdTopic.toCharArray(c, mqttCmdTopic.length());
+      //c[mqttCmdTopic.length()+1] = b[0];
+      //c[mqttCmdTopic.length()+2] = b[1];
+      Serial.println(c );
+      Serial.println(b );
       mqttClient.subscribe(c);
       mqttConnectedAtLeastOnce = 1;
     } else {
@@ -164,7 +169,7 @@ void mqttBegin(){
    Serial.print(topic);
    //char char_array[topic.length()];
    //topic.toCharArray(char_array, topic.length());
-   mqttCmdTopic = topic+"/cmd/#";
+   mqttCmdTopic = topic+"/cmd/#/";
    mqttStatTopic = topic+"/state";
    mqttAnimationNamesTopic = topic+"/animationNames";
    Serial.print("\nTopic: "+mqttCmdTopic);
