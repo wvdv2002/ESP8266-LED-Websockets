@@ -36,7 +36,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   aCmd.toLowerCase();
   aCmd.trim();
   
-  Serial.print("Message arrived [");
+  Serial.print("\nMessage arrived [");
   Serial.print(aTopic);
   Serial.print("] ");
   Serial.println(aPayload);
@@ -112,7 +112,7 @@ void mqttPostAnimationString(void){
 void reconnect() {
   // Loop until we're reconnected
   if(!mqttClient.connected()) {
-    Serial.print("Attempting MQTT connection...");
+    Serial.print("\nAttempting MQTT connection...");
     // Attempt to connect
     if (mqttClient.connect(pvhostname)) {
       Serial.println("connected");
@@ -164,7 +164,7 @@ void mqttBegin(){
    Serial.print(topic);
    //char char_array[topic.length()];
    //topic.toCharArray(char_array, topic.length());
-   mqttCmdTopic = topic+"/cmd/#";
+   mqttCmdTopic = topic+"/cmd/#/";
    mqttStatTopic = topic+"/state";
    mqttAnimationNamesTopic = topic+"/animationNames";
    Serial.print("\nTopic: "+mqttCmdTopic);
