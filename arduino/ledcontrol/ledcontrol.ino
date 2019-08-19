@@ -44,6 +44,8 @@ unsigned int newValue = 0;
 unsigned int myAnimationSpeed = 50;
 unsigned int myAnimationSpeedInput = 1;
 unsigned int myWhiteLedValue=0;
+unsigned int WifiSuccess = 0;
+unsigned int WifiFailCount = 0;
 byte rainbowHue = myHue;            //Using this so the rainbow effect doesn't overwrite the hue set on the website
 
 void changeHue(int);
@@ -111,9 +113,22 @@ void setup() {
   ledSet = CHSV(0,100,100);
   putOnStrip();
   delay(100);                                         
-  ledSet = CHSV(0,100,100);
+  ledSet = CHSV(0,100,0);
   putOnStrip();
-  setupWiFi();
+  if (digitalRead(BUTTON_EXTRA) < 1) {
+    Serial.print("\nStarting with wifimanager ");
+    ledSet = CHSV(0,100,10);  //dim leds to show that access point mode is started
+    putOnStrip();
+    WifiSuccess = setupWiFi(300); //true is start wifimanager to connect to access point, 5mn timeout 
+    if (WifiSuccess == 0) {
+      ledSet = CHSV(0,100,100);  //dim leds to show that access point mode is started
+      putOnStrip();
+      delay(3000);
+      ESP.reset();
+    }
+  } else {
+    WifiSuccess = setupWiFi(3); // continue if wifi is failing
+  }
   ledSet = CHSV(myHue, mySaturation, myValue);
   putOnStrip();
   startSettingsServer();

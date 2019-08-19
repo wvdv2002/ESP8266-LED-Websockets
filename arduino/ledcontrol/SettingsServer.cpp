@@ -10,16 +10,17 @@
 
 #define DBG_OUTPUT_PORT Serial
 
-const char* pvhostname = "Woodblock";
+const char* pvhostname = "tree";
 
 ESP8266WebServer server(80);
 //MDNSResponder mdns;
 ESP8266HTTPUpdateServer httpUpdater;
 
 void showWifiConfigAPMessage(void);
+void changeWhiteIntensity(int);
 
 void handle_root(){
-  server.send(200, "text/plain", "Woodblock light");
+  server.send(200, "text/plain", "Woodblock lighting");
   delay(100);
 }
 
@@ -114,25 +115,12 @@ void handle_wifisetup(void){
     ESP.reset();
 }
 
-void handle_brightness(void)
-{
-    String aStr = server.arg("brightness");
-    int brightness = aStr.toInt();
-    if ((brightness >= 0) && (brightness <= 100))
-    {
-      analogWrite(0,brightness);
-    }
-    server.send(200, "text/plain", "brightness set");
-}
-
-
 void handle_reboot(void)
 {
   server.send(200, "text/plain", "restarting.......");
   delay(600);
   ESP.reset();
 }
-   
 
 void startSettingsServer(void){
     SPIFFS.begin();
@@ -153,7 +141,6 @@ void startSettingsServer(void){
   server.on("/refresh", handle_refresh);
   server.on("/wifisetup",handle_wifisetup);
   server.on("/reboot", handle_reboot);
-  server.on("/brightness",handle_brightness);
    //list directory
   server.on("/list", HTTP_GET, handleFileList);
   server.on("/description.xml", HTTP_GET, [](){ //SSDP server added
@@ -190,7 +177,7 @@ void showWifiConfigAPMessage(WiFiManager *myWiFiManager)
   
 }
 
-void setupWiFi(void){
+int setupWiFi(int timeout){
     // The extra parameters to be configured (can be either global or just in the setup)
   // After connecting, parameter.getValue() will get you the configured value
   // id/name placeholder/prompt default length
@@ -199,19 +186,20 @@ void setupWiFi(void){
   WiFiManager wifiManager;
   wifiManager.setMinimumSignalQuality(10);
   //ifiManager.setAPCallback(showWifiConfigAPMessage);
-  wifiManager.setConfigPortalTimeout(180);
+  wifiManager.setConfigPortalTimeout(timeout);
   wifiManager.setConnectTimeout(60);
   if (!wifiManager.autoConnect("woodblock_AP")) { 
-    Serial.println("failed to connect and hit timeout");
-    delay(3000);
+    Serial.println("failed to connect to wifi access point");
+    return 0;
+    //delay(3000);
     //reset and try again, or maybe put it to deep sleep
-    ESP.reset();
-    delay(5000);
-  }
+    //ESP.reset();
+    //delay(5000);
+  } 
   
   Serial.println("local ip");
   Serial.println(WiFi.localIP());
   Serial.println(WiFi.gatewayIP());
   Serial.println(WiFi.subnetMask());
-
+  return 1;
 }
