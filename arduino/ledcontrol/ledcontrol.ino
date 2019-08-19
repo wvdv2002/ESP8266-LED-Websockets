@@ -44,6 +44,8 @@ unsigned int newValue = 0;
 unsigned int myAnimationSpeed = 50;
 unsigned int myAnimationSpeedInput = 1;
 unsigned int myWhiteLedValue=0;
+unsigned int WifiSuccess = 0;
+unsigned int WifiFailCount = 0;
 byte rainbowHue = myHue;            //Using this so the rainbow effect doesn't overwrite the hue set on the website
 
 void changeHue(int);
@@ -113,7 +115,13 @@ void setup() {
   delay(100);                                         
   ledSet = CHSV(0,100,100);
   putOnStrip();
-  setupWiFi();
+  //if (digitalRead(BUTTON_EXTRA) < 1) {
+    ledSet = CHSV(0,100,10);  //dim leds to show that access point mode is started
+    putOnStrip();
+    WifiSuccess = setupWiFi(300); //true is start wifimanager to connect to access point, 5mn timeout 
+  //} else {
+  //  WifiSuccess = setupWiFi(3); // continue if wifi is failing
+  //}
   ledSet = CHSV(myHue, mySaturation, myValue);
   putOnStrip();
   startSettingsServer();
@@ -191,6 +199,12 @@ void loop() {
     String aMessage = getStatusString();
     webSocket.broadcastTXT(aMessage); // Tell all connected clients which HSV values are running
     mqttPostStatus();
+    if (WifiSuccess == 0 && myEffect==0 ) {
+      WifiFailCount += 1;
+      if ( WifiFailCount > 20) { 
+        ESP.reset(); 
+        }  //reset esp when wifi connection fails only if off
+    }
   }
 /*
   //if (digitalRead(BUTTON_OFF) < 1 && digitalRead(BUTTON_EXTRA) > 0) {

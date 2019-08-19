@@ -177,7 +177,7 @@ void showWifiConfigAPMessage(WiFiManager *myWiFiManager)
   
 }
 
-void setupWiFi(void){
+int setupWiFi(int timeout){
     // The extra parameters to be configured (can be either global or just in the setup)
   // After connecting, parameter.getValue() will get you the configured value
   // id/name placeholder/prompt default length
@@ -186,19 +186,20 @@ void setupWiFi(void){
   WiFiManager wifiManager;
   wifiManager.setMinimumSignalQuality(10);
   //ifiManager.setAPCallback(showWifiConfigAPMessage);
-  wifiManager.setConfigPortalTimeout(180);
+  wifiManager.setConfigPortalTimeout(timeout);
   wifiManager.setConnectTimeout(60);
   if (!wifiManager.autoConnect("woodblock_AP")) { 
-    Serial.println("failed to connect and hit timeout");
-    delay(3000);
+    Serial.println("failed to connect to wifi access point");
+    return 0;
+    //delay(3000);
     //reset and try again, or maybe put it to deep sleep
-    ESP.reset();
-    delay(5000);
-  }
+    //ESP.reset();
+    //delay(5000);
+  } 
   
   Serial.println("local ip");
   Serial.println(WiFi.localIP());
   Serial.println(WiFi.gatewayIP());
   Serial.println(WiFi.subnetMask());
-
+  return 1;
 }
