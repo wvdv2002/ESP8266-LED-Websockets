@@ -223,7 +223,7 @@ void strobe_mode(uint8_t newMode, bool mc){                   // mc stands for '
    
   switch (newMode) {                                          // First time through a new mode, so let's initialize the variables for a given display.
 
-    case  0: if(mc) {fill_solid(leds,NUM_LEDS,CHSV(50,50,0));} break;                     // All off, not animated.
+    case  0: if(mc) {fill_solid(leds,NUM_LEDS,CHSV(50,50,0)); myWhiteLedValue = 0;}  break;                     // All off, not animated.
     case  1: if(mc) {fill_solid(leds, NUM_LEDS,currentSolid);} break;              // All on, not animated.
     case  2: if(mc) {fill_solid(leds,NUM_LEDS,CHSV(50,50,0)); myWhiteLedValue = 50;} break;                     // All white, not animated.
     case  3: if(mc) {thisdelay=80; fill_solid(leds,NUM_LEDS,CHSV(50,50,0)); myWhiteLedValue = 0;}Fire2012();break;

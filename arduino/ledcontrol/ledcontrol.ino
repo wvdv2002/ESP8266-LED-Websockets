@@ -110,23 +110,27 @@ void setup() {
   myHue = EEPROM.read(1);
   mySaturation = EEPROM.read(2);
   myValue = EEPROM.read(3);
-  ledSet = CHSV(0,100,100);
-  putOnStrip();
-  delay(100);                                         
-  ledSet = CHSV(0,100,0);
-  putOnStrip();
+  writeWhiteLedPWMIfChanged(1000);
+  delay(1000);            
+  writeWhiteLedPWMIfChanged(50);
+  delay(1000);         
+  writeWhiteLedPWMIfChanged(0); 
   if (digitalRead(BUTTON_EXTRA) < 1) {
     Serial.print("\nStarting with wifimanager ");
-    ledSet = CHSV(0,100,10);  //dim leds to show that access point mode is started
+    fill_solid(leds,NUM_LEDS,CRGB(50,0,0)); //dim leds red to show that access point mode is started
     putOnStrip();
     WifiSuccess = setupWiFi(300); //true is start wifimanager to connect to access point, 5mn timeout 
     if (WifiSuccess == 0) {
-      ledSet = CHSV(0,100,100);  //dim leds to show that access point mode is started
-      putOnStrip();
+      writeWhiteLedPWMIfChanged(50); //dim leds to show that access point mode is started
       delay(3000);
       ESP.reset();
     }
+  } else if (digitalRead(BUTTON_OFF) < 1) { //skip wifi connection
+    fill_solid(leds,NUM_LEDS,CRGB(0,50,0)); //dim leds green to show that wifi is skipped
+    putOnStrip();
+    delay(1000);
   } else {
+    Serial.print("\nStarting with short timeout ");
     WifiSuccess = setupWiFi(3); // continue if wifi is failing
   }
   ledSet = CHSV(myHue, mySaturation, myValue);
@@ -212,11 +216,15 @@ void loop() {
    //   changeLedAnimation(0);
    // Create double functionality for other buttons
   //}
-  if (digitalRead(BUTTON_ON_NEXT) < 1 && currentChangeTime - lastChangeButtonTime > 1000) {
+  if (digitalRead(BUTTON_ON_NEXT) < 1 && currentChangeTime - lastChangeButtonTime > 500) {
       if (digitalRead(BUTTON_OFF) < 1) { changeLedAnimation(0); }
       else {
         if (myEffect == 0) { changeSaturation(250); }
-        changeLedAnimation(myEffect+1);
+        if (myEffect == 9) { /// skip 10 for now
+          changeLedAnimation(myEffect+2);
+        } else {
+          changeLedAnimation(myEffect+1);
+        }
       }
       lastChangeButtonTime = millis();
   } 
@@ -256,6 +264,9 @@ void writeWhiteLedPWMIfChanged(int value)
 void changeLedAnimation(int animation){
   if(animation==41){
     startindex = random(0,NUM_LEDS-1); //Update flickerled position, hacky I know ;(
+  }
+  if(animation==0) { 
+    writeWhiteLedPWMIfChanged(0); 
   }
   disableSleepTimer();
   if(animation>maxMode){animation=1;}
