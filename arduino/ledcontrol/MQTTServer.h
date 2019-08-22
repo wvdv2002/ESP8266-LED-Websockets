@@ -5,11 +5,17 @@
 
 
 //Set these definitions.
-IPAddress mqttServerIp(192, 168, 1, 4);
-const char* mqttCmdTopic = "livingroom/tree/cmd/#";
-const char* mqttStatTopic = "livingroom/tree/state";
-const char* mqttAnimationNamesTopic = "livingroom/tree/animationNames";
+//IPAddress mqttServerIp(192, 168, 1, 4);
+IPAddress mqttServerIp;
 
+//const char* mqttCmdTopic = "woodblock/cmd/#";
+//const char* mqttStatTopic = "woodblock/state";
+//const char* mqttAnimationNamesTopic = "woodblock/animationNames";
+const char* a = "+";
+
+String mqttCmdTopic = "woodblock/cmd/#";
+String mqttStatTopic = "woodblock/state";
+String mqttAnimationNamesTopic = "woodblock/animationNames";
 
 WiFiClient EspClient;                    
 PubSubClient mqttClient(EspClient);
@@ -30,7 +36,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   aCmd.toLowerCase();
   aCmd.trim();
   
-  Serial.print("Message arrived [");
+  Serial.print("\nMessage arrived [");
   Serial.print(aTopic);
   Serial.print("] ");
   Serial.println(aPayload);
@@ -92,17 +98,21 @@ void mqttPostStatus(void){
   aStatus["g"] = aColor.green;
   aStatus["b"] = aColor.blue;
   aStatus.printTo(aStringStatus);
-  mqttClient.publish(mqttStatTopic,aStringStatus.c_str());
+  char c[mqttStatTopic.length()];
+  mqttStatTopic.toCharArray(c, mqttStatTopic.length());
+  mqttClient.publish(c,aStringStatus.c_str());
 }
 
 void mqttPostAnimationString(void){
-  mqttClient.publish(mqttAnimationNamesTopic,ledPatternNamesList);
+  char c[mqttAnimationNamesTopic.length()];
+  mqttAnimationNamesTopic.toCharArray(c, mqttAnimationNamesTopic.length());
+  mqttClient.publish(c,ledPatternNamesList);
 }
 
 void reconnect() {
   // Loop until we're reconnected
   if(!mqttClient.connected()) {
-    Serial.print("Attempting MQTT connection...");
+    Serial.print("\nAttempting MQTT connection...");
     // Attempt to connect
     if (mqttClient.connect(pvhostname)) {
       Serial.println("connected");
@@ -110,7 +120,9 @@ void reconnect() {
       mqttPostStatus();
       mqttPostAnimationString();
       // ... and resubscribe
-      mqttClient.subscribe(mqttCmdTopic);
+      char c[mqttCmdTopic.length()];
+      mqttCmdTopic.toCharArray(c, mqttCmdTopic.length());
+      mqttClient.subscribe(c);
       mqttConnectedAtLeastOnce = 1;
     } else {
       Serial.print("failed, rc=");
@@ -123,11 +135,46 @@ void reconnect() {
   }
 }
 
+String GetMqttTopic() {
 
+  //read to eeprom
+
+  Serial.println("\n\nReading EEPROM ssid");
+  String esid;
+  for (int i = 13; i < 27; ++i)
+  {
+   char c = EEPROM.read(i);
+   if (c != a[0]) { esid += c; }
+  }
+  //esid.trim();
+  Serial.println(esid.length());
+  Serial.print("Mqtt Topic: ");
+  Serial.println(esid);
+  return esid;
+}
 
 void mqttBegin(){
-   mqttClient.setServer(mqttServerIp, 1883);
-  mqttClient.setCallback(mqttCallback);
+   IPAddress mqttServerIp(EEPROM.read(7), EEPROM.read(8), EEPROM.read(9), EEPROM.read(10));
+   Serial.print("Using ip: ");
+   Serial.print(EEPROM.read(7));
+   Serial.print(EEPROM.read(8));
+   Serial.print(EEPROM.read(9));
+   Serial.print(EEPROM.read(10));
+   String topic = GetMqttTopic();
+   Serial.print(topic);
+   //char char_array[topic.length()];
+   //topic.toCharArray(char_array, topic.length());
+   mqttCmdTopic = topic+"/cmd/#/";
+   mqttStatTopic = topic+"/state";
+   mqttAnimationNamesTopic = topic+"/animationNames";
+   Serial.print("\nTopic: "+mqttCmdTopic);
+   int port1 = EEPROM.read(11);
+   int port2 = EEPROM.read(12);
+   int port = port1*256 + port2;
+   Serial.print("\nPort: ");
+   Serial.print(port);
+   mqttClient.setServer(mqttServerIp, port);
+   mqttClient.setCallback(mqttCallback);
 }
 
 void mqttTask(){

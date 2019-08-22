@@ -83,7 +83,22 @@ void setup() {
  // pinMode(BUTTON_ON_NEXT, INPUT_PULLUP);
  // pinMode(BUTTON_EXTRA, INPUT_PULLUP);
   
-  EEPROM.begin(7);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
+  EEPROM.begin(27);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
+  /*  0 = myEffect
+   *  1 = myHue
+   *  2 = mySaturation 
+   *  3 = myValue
+   *  4 = myWhiteValue
+   *  5 = myWhiteValue / 256
+   *  6 = speed
+   *  7 = first digit mqtt ip
+   *  8 = second digit mqtt ip
+   *  9 = third digit mqtt ip
+   *  10 = fourth digit mqtt ip
+   *  11 = mqtt port msbs
+   *  12 = mqtt port lsbs
+   *  13-26 = Mqtt main topic
+   */
   Serial.begin(115200);
   Serial.println("Ledtest example");
 
@@ -108,6 +123,9 @@ void setup() {
   ledAnimationsSetup();
   ledAnimationsSetSolidColor(CHSV(myHue,mySaturation,myValue));
   mqttBegin();
+  fill_solid(leds,NUM_LEDS,CHSV(50,50,0));
+  myWhiteLedValue = 0;
+  putOnStrip();
   changeLedAnimation(startEffect);
 }
 
@@ -165,7 +183,7 @@ void loop() {
   // EEPROM-commit and websocket broadcast -- they get called once if there has been a change 1 second ago and no further change since. This happens for performance reasons.
   currentChangeTime = millis();
   if (currentChangeTime - lastChangeTime > 5000 && eepromCommitted == false) {
-     Serial.print("Heap free: ");  
+     Serial.print("\nHeap free: ");  
      Serial.print(system_get_free_heap_size());
 
     EEPROM.commit();
