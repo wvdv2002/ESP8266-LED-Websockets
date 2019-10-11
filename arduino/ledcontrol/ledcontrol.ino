@@ -235,7 +235,6 @@ void loop() {
    //   changeLedAnimation(0);
    // Create double functionality for other buttons
   //}
-  
   if (digitalRead(BUTTON_ON_NEXT) < 1 && currentChangeTime - lastChangeButtonTime > 500) {
       if (digitalRead(BUTTON_OFF) < 1) { changeLedAnimation(0); }
       else {
@@ -271,13 +270,13 @@ void loop() {
       } else if (myEffect == 3 && digitalRead(BUTTON_OFF) < 1) {
         //change cool
         newCool = FireCooling + 2;
-        if (newCool > 25) { newCool = 0; }
+        if (newCool > 30) { newCool = 0; }
         changeCooling(newCool);
       } else if (myEffect == 3) {
         //change spark
         newSpark = FireSparking + 10;
-        if (newCool > 100) { newSpark = 0; }
-        changeCooling(newSpark);
+        if (newSpark > 100) { newSpark = 0; }
+        changeSparking(newSpark);
       }
       lastChangeButtonTime = millis();      
   }
@@ -359,7 +358,6 @@ void changeHue(int hue){
     EEPROM.write(1, myHue);
     lastChangeTime = millis();
     eepromCommitted = false;
-    updateNeeded = 1;
     ledAnimationsSetSolidColor(CHSV(myHue,mySaturation,myValue));
   }
 }

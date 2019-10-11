@@ -178,15 +178,14 @@ void ledAnimationsLoop() {
 
   EVERY_N_MILLISECONDS(50) {                                                 // Smooth palette transitioning runs continuously.
     uint8_t maxChanges = 24; 
-    nblendPaletteTowardPalette(currentPalette, targetPalette, maxChanges);
+    nblendPaletteTowardPalette(currentPalette, targetPalette, maxChanges);   
   }
 
-  EVERY_N_SECONDS(5) {                                                        // If selected, change the target palette to a random one every 5 seconds. this is used in animations
+  EVERY_N_SECONDS(5) {                                                        // If selected, change the target palette to a random one every 5 seconds.
     if (palchg == 1) SetupSimilar4Palette();
     if (palchg == 2) SetupRandom4Palette();
     if (palchg == 3) SetupRandom16Palette();
-    if (palchg != 0) updateNeeded = 1;
-  }
+}
 
   EVERY_N_MILLIS_I(thistimer, thisdelay) {                                    // Sets the original delay time.
     thistimer.setPeriod(thisdelay);                                           // This is how you update the delay value on the fly.
@@ -194,12 +193,12 @@ void ledAnimationsLoop() {
     if (ledMode > 2) updateNeeded = 1;                                        //update only when ledmode > 2
   }
 
-  //if(glitter) addglitter(10);                                                 // If the glitter flag is set, let's add some.
-    
+  if(glitter) addglitter(10);                                                 // If the glitter flag is set, let's add some.
+  
 } // loop()
 
 void ledAnimationsChangedAnimation(int newMode){
-  if (newMode != ledMode || newMode == 4){
+  if (newMode != ledMode){
     strobe_mode(newMode, 1);
     ledMode = newMode;
     updateNeeded = 1;
@@ -232,7 +231,7 @@ void strobe_mode(uint8_t newMode, bool mc){                   // mc stands for '
     case  1: if(mc) {fill_solid(leds, NUM_LEDS,currentSolid); palchg=0;} break;              // All on, not animated.
     case  2: if(mc) {fill_solid(leds,NUM_LEDS,CHSV(50,50,0)); myWhiteLedValue = 50; palchg=0;} break;                     // All white, not animated.
     case  3: if(mc) {thisdelay=80; fill_solid(leds,NUM_LEDS,CHSV(50,50,0)); myWhiteLedValue = 0;}Fire2012();break;
-    case  4: if(mc) {thisdelay=4; startindex=random(0,NUM_LEDS-1); myWhiteLedValue = 0; palchg=0;} ledsCandle(); break;
+    case  4: if(mc) {thisdelay=2; startindex=random(0,NUM_LEDS-1); myWhiteLedValue = 0; palchg=0;} ledsCandle(); break;
     case  5: if(mc) {thisdelay=10; allfreq=2; thisspeed=1; thatspeed=1; thishue=0; thathue=128; thisdir=0; thisrot=1; thatrot=1; thiscutoff=128; thatcutoff=192; myWhiteLedValue = 0; palchg=0;} two_sin(); break;
     case  6: if(mc) {thisdelay=20; targetPalette=RainbowColors_p; allfreq=4; bgclr=0; bgbri=0; thisbright=255; startindex=64; thisinc=2; thiscutoff=224; thisphase=0; thiscutoff=224; thisrot=0; thisspeed=4; wavebright=255; palchg=0;} one_sin_pal(); break;
     case  7: if(mc) {thisdelay=10; targetPalette = PartyColors_p; palchg=2;} noise8_pal(); break;
