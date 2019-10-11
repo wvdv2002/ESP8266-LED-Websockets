@@ -76,6 +76,7 @@ TBlendType    currentBlending;                                // NOBLEND or LINE
 CRGB currentSolid;
 
 uint8_t ledMode = 0;                                              // Starting mode is typically 0.
+uint8_t updateNeeded = 0;                                     // tell main loop if leds need to be updated
 uint8_t demorun = 0;                                          // 0 = regular mode, 1 = demo mode, 2 = shuffle mode.
 uint8_t demotime = 10;                                        // Set the length of the demo timer.
 
@@ -177,28 +178,31 @@ void ledAnimationsLoop() {
 
   EVERY_N_MILLISECONDS(50) {                                                 // Smooth palette transitioning runs continuously.
     uint8_t maxChanges = 24; 
-    nblendPaletteTowardPalette(currentPalette, targetPalette, maxChanges);   
+    nblendPaletteTowardPalette(currentPalette, targetPalette, maxChanges);
   }
 
-  EVERY_N_SECONDS(5) {                                                        // If selected, change the target palette to a random one every 5 seconds.
+  EVERY_N_SECONDS(5) {                                                        // If selected, change the target palette to a random one every 5 seconds. this is used in animations
     if (palchg == 1) SetupSimilar4Palette();
     if (palchg == 2) SetupRandom4Palette();
     if (palchg == 3) SetupRandom16Palette();
-}
+    if (palchg != 0) updateNeeded = 1;
+  }
 
   EVERY_N_MILLIS_I(thistimer, thisdelay) {                                    // Sets the original delay time.
     thistimer.setPeriod(thisdelay);                                           // This is how you update the delay value on the fly.
     strobe_mode(ledMode, 0);                                                  // Strobe to display the current sequence, but don't initialize the variables, so mc=0;
+    if (ledMode > 2) updateNeeded = 1;                                        //update only when ledmode > 2
   }
 
-  if(glitter) addglitter(10);                                                 // If the glitter flag is set, let's add some.
-  
+  //if(glitter) addglitter(10);                                                 // If the glitter flag is set, let's add some.
+    
 } // loop()
 
 void ledAnimationsChangedAnimation(int newMode){
-  if (newMode != ledMode){
+  if (newMode != ledMode || newMode == 4){
     strobe_mode(newMode, 1);
     ledMode = newMode;
+    updateNeeded = 1;
   }
 }
 
@@ -219,31 +223,32 @@ void strobe_mode(uint8_t newMode, bool mc){                   // mc stands for '
 
   if(mc) {
     fill_solid(leds,NUM_LEDS,CRGB(0,0,0));                    // Clean up the array for the first time through. Don't show display though, so you may have a smooth transition.
+    palchg=0;
   }
    
   switch (newMode) {                                          // First time through a new mode, so let's initialize the variables for a given display.
 
-    case  0: if(mc) {fill_solid(leds,NUM_LEDS,CHSV(50,50,0)); myWhiteLedValue = 0;}  break;                     // All off, not animated.
-    case  1: if(mc) {fill_solid(leds, NUM_LEDS,currentSolid);} break;              // All on, not animated.
-    case  2: if(mc) {fill_solid(leds,NUM_LEDS,CHSV(50,50,0)); myWhiteLedValue = 50;} break;                     // All white, not animated.
+    case  0: if(mc) {fill_solid(leds,NUM_LEDS,CHSV(50,50,0)); myWhiteLedValue = 0; palchg=0;}  break;                     // All off, not animated.
+    case  1: if(mc) {fill_solid(leds, NUM_LEDS,currentSolid); palchg=0;} break;              // All on, not animated.
+    case  2: if(mc) {fill_solid(leds,NUM_LEDS,CHSV(50,50,0)); myWhiteLedValue = 50; palchg=0;} break;                     // All white, not animated.
     case  3: if(mc) {thisdelay=80; fill_solid(leds,NUM_LEDS,CHSV(50,50,0)); myWhiteLedValue = 0;}Fire2012();break;
-    case  4: if(mc) {thisdelay=4; startindex=random(0,NUM_LEDS-1); myWhiteLedValue = 0;} ledsCandle(); break;
-    case  5: if(mc) {thisdelay=10; allfreq=2; thisspeed=1; thatspeed=1; thishue=0; thathue=128; thisdir=0; thisrot=1; thatrot=1; thiscutoff=128; thatcutoff=192; myWhiteLedValue = 0;} two_sin(); break;
-    case  6: if(mc) {thisdelay=20; targetPalette=RainbowColors_p; allfreq=4; bgclr=0; bgbri=0; thisbright=255; startindex=64; thisinc=2; thiscutoff=224; thisphase=0; thiscutoff=224; thisrot=0; thisspeed=4; wavebright=255;} one_sin_pal(); break;
+    case  4: if(mc) {thisdelay=4; startindex=random(0,NUM_LEDS-1); myWhiteLedValue = 0; palchg=0;} ledsCandle(); break;
+    case  5: if(mc) {thisdelay=10; allfreq=2; thisspeed=1; thatspeed=1; thishue=0; thathue=128; thisdir=0; thisrot=1; thatrot=1; thiscutoff=128; thatcutoff=192; myWhiteLedValue = 0; palchg=0;} two_sin(); break;
+    case  6: if(mc) {thisdelay=20; targetPalette=RainbowColors_p; allfreq=4; bgclr=0; bgbri=0; thisbright=255; startindex=64; thisinc=2; thiscutoff=224; thisphase=0; thiscutoff=224; thisrot=0; thisspeed=4; wavebright=255; palchg=0;} one_sin_pal(); break;
     case  7: if(mc) {thisdelay=10; targetPalette = PartyColors_p; palchg=2;} noise8_pal(); break;
-    case  8: if(mc) {thisdelay=10; allfreq=4; thisspeed=-1; thatspeed=0; thishue=64; thathue=192; thisdir=0; thisrot=0; thatrot=0; thiscutoff=64; thatcutoff=192;} two_sin(); break;
-    case  9: if(mc) {thisdelay=20; targetPalette=RainbowColors_p; allfreq=10; bgclr=64; bgbri=4; thisbright=255; startindex=64; thisinc=2; thiscutoff=224; thisphase=0; thiscutoff=224; thisrot=0; thisspeed=4; wavebright=255;} one_sin_pal(); break;
-    case 10: if(mc) {thisdelay=10; numdots=2; targetPalette=PartyColors_p; thisfade=16; thisbeat=8; thisbright=255; thisdiff=64;} juggle_pal(); break;
-    case 11: if(mc) {thisdelay=40; targetPalette = LavaColors_p; thisindex=128; thisdir=1; thisrot=0; thisbright=255; bgclr=200; bgbri=6;} matrix_pal(); break;
-    case 12: if(mc) {thisdelay=10; allfreq=6; thisspeed=2; thatspeed=3; thishue=96; thathue=224; thisdir=1; thisrot=0; thatrot=0; thiscutoff=64; thatcutoff=64;} two_sin(); break;
-    case 13: if(mc) {thisdelay=20; targetPalette=RainbowColors_p; allfreq=16; bgclr=0; bgbri=0; thisbright=255; startindex=64; thisinc=2; thiscutoff=224; thisphase=0; thiscutoff=224; thisrot=0; thisspeed=4; wavebright=255;} one_sin_pal(); break;
-    case 14: if(mc) {thisdelay=50; mul1=5; mul2=8; mul3=7;} three_sin_pal(); break;
-    case 15: if(mc) {thisdelay=10; targetPalette=ForestColors_p;} serendipitous_pal(); break;
-    case 16: if(mc) {thisdelay=20; targetPalette=LavaColors_p; allfreq=8; bgclr=0; bgbri=4; thisbright=255; startindex=64; thisinc=2; thiscutoff=224; thisphase=0; thiscutoff=224; thisrot=0; thisspeed=4; wavebright=255;} one_sin_pal(); break;
-    case 17: if(mc) {thisdelay=10; allfreq=20; thisspeed=2; thatspeed=-1; thishue=24; thathue=180; thisdir=1; thisrot=0; thatrot=1; thiscutoff=64; thatcutoff=128;} two_sin(); break;
-    case 18: if(mc) {thisdelay=50; targetPalette = PartyColors_p; thisindex=64; thisdir=0; thisrot=1; thisbright=255; bgclr=100; bgbri=10;} matrix_pal(); break;
+    case  8: if(mc) {thisdelay=10; allfreq=4; thisspeed=-1; thatspeed=0; thishue=64; thathue=192; thisdir=0; thisrot=0; thatrot=0; thiscutoff=64; thatcutoff=192; palchg=0;} two_sin(); break;
+    case  9: if(mc) {thisdelay=20; targetPalette=RainbowColors_p; allfreq=10; bgclr=64; bgbri=4; thisbright=255; startindex=64; thisinc=2; thiscutoff=224; thisphase=0; thiscutoff=224; thisrot=0; thisspeed=4; wavebright=255; palchg=0;} one_sin_pal(); break;
+    case 10: if(mc) {thisdelay=10; numdots=2; targetPalette=PartyColors_p; thisfade=16; thisbeat=8; thisbright=255; thisdiff=64; palchg=0;} juggle_pal(); break;
+    case 11: if(mc) {thisdelay=40; targetPalette = LavaColors_p; thisindex=128; thisdir=1; thisrot=0; thisbright=255; bgclr=200; bgbri=6; palchg=0;} matrix_pal(); break;
+    case 12: if(mc) {thisdelay=10; allfreq=6; thisspeed=2; thatspeed=3; thishue=96; thathue=224; thisdir=1; thisrot=0; thatrot=0; thiscutoff=64; thatcutoff=64; palchg=0;} two_sin(); break;
+    case 13: if(mc) {thisdelay=20; targetPalette=RainbowColors_p; palchg=0; allfreq=16; bgclr=0; bgbri=0; thisbright=255; startindex=64; thisinc=2; thiscutoff=224; thisphase=0; thiscutoff=224; thisrot=0; thisspeed=4; wavebright=255;} one_sin_pal(); break;
+    case 14: if(mc) {thisdelay=50; mul1=5; mul2=8; mul3=7; palchg=0;} three_sin_pal(); break;
+    case 15: if(mc) {thisdelay=10; targetPalette=ForestColors_p; palchg=0;} serendipitous_pal(); break;
+    case 16: if(mc) {thisdelay=20; targetPalette=LavaColors_p; palchg=0; allfreq=8; bgclr=0; bgbri=4; thisbright=255; startindex=64; thisinc=2; thiscutoff=224; thisphase=0; thiscutoff=224; thisrot=0; thisspeed=4; wavebright=255;} one_sin_pal(); break;
+    case 17: if(mc) {thisdelay=10; allfreq=20; thisspeed=2; palchg=0; thatspeed=-1; thishue=24; thathue=180; thisdir=1; thisrot=0; thatrot=1; thiscutoff=64; thatcutoff=128;} two_sin(); break;
+    case 18: if(mc) {thisdelay=50; targetPalette = PartyColors_p; palchg=0; thisindex=64; thisdir=0; thisrot=1; thisbright=255; bgclr=100; bgbri=10;} matrix_pal(); break;
     case 19: if(mc) {thisdelay=10; targetPalette = OceanColors_p; palchg=1;} noise8_pal(); break;
-    case 20: if(mc) {thisdelay=10; targetPalette=PartyColors_p;} circnoise_pal_2(); break;
+    case 20: if(mc) {thisdelay=10; targetPalette=PartyColors_p; palchg=0;} circnoise_pal_2(); break;
     case 21: if(mc) {thisdelay=20; allfreq=10; thisspeed=1; thatspeed=-2; thishue=48; thathue=160; thisdir=0; thisrot=1; thatrot=-1; thiscutoff=128; thatcutoff=192;} two_sin(); break;
     case 22: if(mc) {thisdelay=50; mul1=6; mul2=9; mul3=11;} three_sin_pal(); break;
     case 23: if(mc) {thisdelay=10; thisdir=1; thisrot=1; thisdiff=1;} rainbow_march(); break;
