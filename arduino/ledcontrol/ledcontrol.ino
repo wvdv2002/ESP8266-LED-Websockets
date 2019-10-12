@@ -358,6 +358,7 @@ void changeHue(int hue){
     EEPROM.write(1, myHue);
     lastChangeTime = millis();
     eepromCommitted = false;
+    updateNeeded = 1;
     ledAnimationsSetSolidColor(CHSV(myHue,mySaturation,myValue));
   }
 }

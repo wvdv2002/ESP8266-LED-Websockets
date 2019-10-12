@@ -198,8 +198,8 @@ void ledAnimationsLoop() {
 } // loop()
 
 void ledAnimationsChangedAnimation(int newMode){
-  if (newMode != ledMode){
-    strobe_mode(newMode, 1);
+  if (newMode != ledMode || newMode == 4){  //always update candle
+     strobe_mode(newMode, 1);
     ledMode = newMode;
     updateNeeded = 1;
   }

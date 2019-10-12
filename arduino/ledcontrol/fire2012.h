@@ -8,8 +8,8 @@ void ledsCandle(void)
   ledSet.fadeToBlackBy(1);
   leds[startindex] = CHSV(flickerHue, 255, flickerValue);
   if(flickerSkip--<0){
-    flickerValue = 110 + random(-10, +10); //70 works best
-    flickerHue = random(32, 36);
+    flickerValue = 70 + random(-10, +10); //70 works best
+    flickerHue = random(30, 38);
     flickerSkip = random(12, 40);
   }
 }
