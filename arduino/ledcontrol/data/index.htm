@@ -27,11 +27,15 @@
  <div id="patternButtons">
  
  </div> <br/><br/>
+ 
+ 
  H: <input id="H" type="range" min="0" max="255" step="1" oninput="ledHue(this.value);"/><br/>
  S: <input id="S" type="range" min="0" max="255" step="1" oninput="ledSaturation(this.value);"/><br/>
  V: <input id="V" type="range" min="0" max="255" step="1" oninput="ledValue(this.value);" /><br/>
  W: <input id="W" type="range" min="0" max="1023" step="1" oninput="whiteLedValue(this.value);" /><br/> <br />
  Spd: <input id="SPD" type="range" min="0" max="100" step="1" oninput="animationSpeedSet(this.value);" /><br/> <br />
+ FireCooling: <input id="COOL" type="range" min="0" max="25" step="1" oninput="selectFireCooling(this.value);" /><br/> <br />
+ FireSparking: <input id="Spark" type="range" min="0" max="100" step="1" oninput="selectFireSparking(this.value);" /><br/> <br />
  <button onclick="sleepTime(document.getElementById('sleepMinutes').value);">Sleep</button>: <input type="text" size="4" id="sleepMinutes" value="60"/><br /><br />
  <input id="Sleep" oninput="document.getElementById('sleepMinutes').value=this.value;" type="range" min="1" max="120" step="1" value="60"/><br/><br />
 	
@@ -108,7 +112,7 @@ function whiteLedValue(newValue) {
 	connection.send("e"+newValue); 
 };
 function animationSpeedSet(newValue){
-	connection.send("s"+newValue)
+	connection.send("t"+newValue)
 }
 function selectAnimation(aPattern){
 	connection.send("a"+aPattern.substring(3))
@@ -147,6 +151,9 @@ function createPatternButtons(aListOfPatterns){
 		btn.addEventListener("click",function(){selectAnimation(this.id)},false)
 		document.getElementById('patternButtons').appendChild(btn)
 		document.getElementById('patternButtons').appendChild(document.createTextNode(" "))
+		
+
+		
 	}
 }
 

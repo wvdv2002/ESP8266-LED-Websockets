@@ -12,6 +12,7 @@ IPAddress mqttServerIp;
 //const char* mqttStatTopic = "woodblock/state";
 //const char* mqttAnimationNamesTopic = "woodblock/animationNames";
 const char* a = "+";
+const char* b = "/#";
 
 String mqttCmdTopic = "woodblock/cmd/#";
 String mqttStatTopic = "woodblock/state";
@@ -59,6 +60,10 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       demorun = aPayload.toInt();
     }else if(aCmd=="demotime"){
       demotime = aPayload.toInt();
+    }else if(aCmd=="firecooling"){
+      changeCooling(aPayload.toInt());
+    }else if(aCmd=="firesparking"){
+      changeSparking(aPayload.toInt());
     }else if(aCmd=="sleep"){
      fVal = aPayload.toInt();
      if (fVal != 0){
@@ -122,6 +127,10 @@ void reconnect() {
       // ... and resubscribe
       char c[mqttCmdTopic.length()];
       mqttCmdTopic.toCharArray(c, mqttCmdTopic.length());
+      //c[mqttCmdTopic.length()+1] = b[0];
+      //c[mqttCmdTopic.length()+2] = b[1];
+      Serial.println(c );
+      Serial.println(b );
       mqttClient.subscribe(c);
       mqttConnectedAtLeastOnce = 1;
     } else {
@@ -156,9 +165,12 @@ String GetMqttTopic() {
 void mqttBegin(){
    IPAddress mqttServerIp(EEPROM.read(7), EEPROM.read(8), EEPROM.read(9), EEPROM.read(10));
    Serial.print("Using ip: ");
-   Serial.print(EEPROM.read(7));
-   Serial.print(EEPROM.read(8));
-   Serial.print(EEPROM.read(9));
+   Serial.print(EEPROM.read(7) );
+   Serial.print("." );
+   Serial.print(EEPROM.read(8) );
+   Serial.print("." );
+   Serial.print(EEPROM.read(9) );
+   Serial.print("." );
    Serial.print(EEPROM.read(10));
    String topic = GetMqttTopic();
    Serial.print(topic);

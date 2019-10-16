@@ -90,6 +90,20 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
                String xVal = (text.substring(text.indexOf("s") + 1, text.length()));
                changeAnimationSpeed(xVal.toInt());  
              }
+             if (text.startsWith("g")) {
+               String xVal = (text.substring(text.indexOf("g") + 1, text.length()));
+               Serial.print("\nGCool " + xVal);
+               changeCooling(xVal.toInt());  
+               EEPROM.write(27, xVal.toInt());
+               eepromCommitted = false; 
+             }
+             if (text.startsWith("h")) {
+               String xVal = (text.substring(text.indexOf("h") + 1, text.length()));
+               Serial.print("\nHSpark " + xVal);
+               changeSparking(xVal.toInt()); 
+               EEPROM.write(28, xVal.toInt());
+               eepromCommitted = false;   
+             }
              //restart
              if (text.startsWith("restart")) {
                delay(600);
