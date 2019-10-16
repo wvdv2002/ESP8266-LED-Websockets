@@ -31,12 +31,13 @@ The website queries the ESP8266 to populate the list of supported animations. Th
 
 ## Websocket
 The website shown to the user uses a websocket to send data to the ESP module. This feels very 'snappy', when manipulating the sliders the reaction is almost instant. You can of course also connect to the websocket server directly and send commands. Please check the index.htm file and the Ledwebsockets.h file for information on which commands can be send or received.
+The websocket interface can be used to set the settings for mqtt: IP address, Port and Topic. See chapter MQTT for usage
 
 ## RGBW strip support
 I used my own way of hacking support into the firmware for the SK6812 led, which is a real nice RGBWW led with the white leds also individually adressable. Fastled has no support for this yet. The fastled library is used for all animations and calculations etcetera and the Adafruit Neopixel library is used to actually drive the leds. Which is a good enough compromise for now. The white leds of the strip are driven as one led, they can only be controlled by a seperate slider, so no calculating W from RGB, this is hard anyway because you have SK6812 leds with different color temperatures. But if anybody wants to use this anyway there is only one function where the code has to be changed.
 
 ## MQTT
-There is basic MQTT support now as well. If you do not need MQTT, please comment out the #define USE_MQTT line in the ledcontrol.ino file.
+There is basic MQTT support now as well. If you do not need MQTT, please comment out the #define USE_MQTT line in the ledcontrol.ino file. Mqtt settings can be set using the websocket interface.
 
 First you define the mqtt server and the topics in the MQTTServer.h file.
 At boot, the animationNames will be posted to the mqttAnimationNamesTopic.
@@ -51,23 +52,32 @@ The following commands can be used:
 * hue: The brightness in HSB, value from 
 * saturation: The brightness in HSB, value from 0 to 255.
 * brightness: The brightness in HSB, value from 0 to 255.
-* sleep: The time until fading out all leds, value from 1 to 1000;
+* sleep: The time until fading out all leds, value from 1 to 1000; (Not tested)
 * animation: The number of the animation to be selected (0 is off, 1 is solid, rest are animations).
 * speed: The speed of the animation (does not do much yet).
 * white: The intensity from 0-1023 of the white leds.
 * hsv: Comma seperated HSV values ("128,94,16").
 * rgb: Comma seperated RGB values ("128,128,128").
+* demo: Enable demo mode ("0", "1")
+* demotime: Amount of seconds between each animation for the demo
+* firecooling: The fire animation 'cooling' parameter (best between 5 and 30, not limited)
+* firesparking: The fire animation 'sparking' parameter (best between 40 and 150)
 
+## Buttons
+Three buttons are defined to be able to control the led strip without a wifi connection
+* Button 1: Switch to next animation (off, solid, white, fire, ...)
+- In combination with button 3, switch to off
+* Button 2: Function depends on animation
+- Solid: Control dim value, in combination with button 3: Control hue
+- White: Control dim value 
+- Fire: Control 'cooling' parameter, in combination with button 3: control 'sparking' parameter
+- Others: Control speed
+* Button 3: Used in combintion with button 2 and 1.
 
 ## TODO:
 - Add config page to set settings instead of hard coding them.
 
 
 ## Development:
-While further developing the website, it might be usefull to know you can run the website in the data folder from a computer as well and let it connect to an ESP running the software, just open the file using any webbrowser, and add the following to the URL: ?ip=*IP*. This saves you from uploading the data folder while developing the website.
-Maybe somebody can also add the following animations:
-https://github.com/daterdots/LEDs
-
-This is still a WIP. The upload via Arduino IDE is broken...
-
+This work was forked from https://github.com/wvdv2002/ESP8266-LED-Websockets
 This work was forked from https://github.com/TheAustrian/ESP8266-LED-Websockets/

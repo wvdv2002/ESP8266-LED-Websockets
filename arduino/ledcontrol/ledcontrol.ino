@@ -25,10 +25,10 @@ extern "C" {
 #define BUTTON_EXTRA 5
 
 // Defining LED strip
-#define NUM_LEDS 60                 //Number of LEDs in your strip
-#define DATA_PIN 13                //Using WS2812B -- if you use APA102 or other 4-wire LEDs you need to also add a clock pin
+#define NUM_LEDS 72                 //Number of LEDs in your strip
+#define DATA_PIN 4                //Using WS2812B -- if you use APA102 or other 4-wire LEDs you need to also add a clock pin
 #define BRIGHTNESS 255
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, DATA_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, DATA_PIN, NEO_GRBW + NEO_KHZ800);
 
 CRGB leds[NUM_LEDS];
 CRGBSet ledSet(leds, NUM_LEDS);    //Trying LEDSet from FastLED
@@ -41,9 +41,18 @@ byte mySaturation = 168;
 byte myValue = 255;
 unsigned int newHue = 0;
 unsigned int newValue = 0;
+unsigned int newCool = 0;
+unsigned int newSpark = 0;
 unsigned int myAnimationSpeed = 50;
 unsigned int myAnimationSpeedInput = 1;
 unsigned int myWhiteLedValue=0;
+unsigned int WifiSuccess = 0;
+unsigned int WifiFailCount = 0;
+unsigned int updateLedStrip = 0;
+
+unsigned int FireCooling = 16;
+unsigned int FireSparking = 60;
+
 byte rainbowHue = myHue;            //Using this so the rainbow effect doesn't overwrite the hue set on the website
 
 void changeHue(int);
@@ -55,6 +64,8 @@ void changeAnimationSpeed(int);
 void changeAnimationButtonSpeed();
 void changeHSV(int,int,int);
 void changeRGB(int,int,int);
+void changeSparking(int);
+void changeCooling(int);
 
 bool eepromCommitted = true;      
 unsigned long lastChangeTime = 0;
@@ -75,15 +86,15 @@ void setup() {
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
   
-  analogWriteFreq(200);
-  writeWhiteLedPWMIfChanged(0);  
-  writeWhiteLedPWMIfChanged(1);  
+  //analogWriteFreq(200);
+  //writeWhiteLedPWMIfChanged(0);  
+  //writeWhiteLedPWMIfChanged(1);  
 
  // pinMode(BUTTON_OFF, INPUT_PULLUP);
  // pinMode(BUTTON_ON_NEXT, INPUT_PULLUP);
  // pinMode(BUTTON_EXTRA, INPUT_PULLUP);
   
-  EEPROM.begin(27);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
+  EEPROM.begin(29);  // Using simulated EEPROM on the ESP8266 flash to remember settings after restarting the ESP
   /*  0 = myEffect
    *  1 = myHue
    *  2 = mySaturation 
@@ -98,6 +109,8 @@ void setup() {
    *  11 = mqtt port msbs
    *  12 = mqtt port lsbs
    *  13-26 = Mqtt main topic
+   *  27 = fireCooling
+   *  28 = fireSparking
    */
   Serial.begin(115200);
   Serial.println("Ledtest example");
@@ -108,12 +121,32 @@ void setup() {
   myHue = EEPROM.read(1);
   mySaturation = EEPROM.read(2);
   myValue = EEPROM.read(3);
-  ledSet = CHSV(0,100,100);
-  putOnStrip();
-  delay(100);                                         
-  ledSet = CHSV(0,100,100);
-  putOnStrip();
-  setupWiFi();
+  FireCooling = EEPROM.read(27);
+  FireSparking = EEPROM.read(28);
+  writeWhiteLedPWMIfChanged(1000);
+  delay(1000);            
+  writeWhiteLedPWMIfChanged(50);
+  delay(1000);         
+  writeWhiteLedPWMIfChanged(0); 
+ 
+  if (digitalRead(BUTTON_EXTRA) < 1) {
+    Serial.print("\nStarting with wifimanager ");
+    fill_solid(leds,NUM_LEDS,CRGB(50,0,0)); //dim leds red to show that access point mode is started
+    putOnStrip();
+    WifiSuccess = setupWiFi(300); //true is start wifimanager to connect to access point, 5mn timeout 
+    if (WifiSuccess == 0) {
+      writeWhiteLedPWMIfChanged(50); //dim leds to show that access point mode is started
+      delay(3000);
+      ESP.reset();
+    }
+  } else if (digitalRead(BUTTON_OFF) < 1) { //skip wifi connection
+    fill_solid(leds,NUM_LEDS,CRGB(0,50,0)); //dim leds green to show that wifi is skipped
+    putOnStrip();
+    delay(1000);
+  } else {
+    Serial.print("\nStarting with short timeout ");
+    WifiSuccess = setupWiFi(3); // continue if wifi is failing
+  }
   ledSet = CHSV(myHue, mySaturation, myValue);
   putOnStrip();
   startSettingsServer();
@@ -163,8 +196,9 @@ void whiteFadeToBlackBy(int amount){
 
 void loop() {
   webSocket.loop();                           // handles websockets
+  
   mqttTask();
-  settingsServerTask();
+  settingsServerTask(); 
   if (myEffect!=0)
   {
     writeWhiteLedPWMIfChanged(myWhiteLedValue);  
@@ -177,9 +211,13 @@ void loop() {
   }
   //ledAnimationsChangedAnimation(myEffect);
   //ledAnimationsChangedAnimationSpeed(myAnimationSpeed);
-  ledAnimationsLoop();
-  putOnStrip();
-    
+  ledAnimationsLoop(); 
+  if ( updateNeeded == 1 ) {   //only update if something changed
+    if (myEffect == 1) { myWhiteLedValue = 0; }  //for some reason white stays on when in solid mode
+    updateNeeded = 0;
+    putOnStrip();  
+  } 
+
   // EEPROM-commit and websocket broadcast -- they get called once if there has been a change 1 second ago and no further change since. This happens for performance reasons.
   currentChangeTime = millis();
   if (currentChangeTime - lastChangeTime > 5000 && eepromCommitted == false) {
@@ -192,21 +230,27 @@ void loop() {
     webSocket.broadcastTXT(aMessage); // Tell all connected clients which HSV values are running
     mqttPostStatus();
   }
-/*
+
   //if (digitalRead(BUTTON_OFF) < 1 && digitalRead(BUTTON_EXTRA) > 0) {
    //   changeLedAnimation(0);
    // Create double functionality for other buttons
   //}
-  if (digitalRead(BUTTON_ON_NEXT) < 1 && currentChangeTime - lastChangeButtonTime > 1000) {
+  if (digitalRead(BUTTON_ON_NEXT) < 1 && currentChangeTime - lastChangeButtonTime > 500) {
       if (digitalRead(BUTTON_OFF) < 1) { changeLedAnimation(0); }
       else {
         if (myEffect == 0) { changeSaturation(250); }
-        changeLedAnimation(myEffect+1);
+        if (myEffect == 9) { /// skip 10 for now
+          changeLedAnimation(myEffect+2);
+        } else {
+          changeLedAnimation(myEffect+1);
+        }
       }
       lastChangeButtonTime = millis();
   } 
   if (digitalRead(BUTTON_EXTRA) < 1 && currentChangeTime - lastChangeButtonTime > 350) {
-      if (myEffect > 2) {
+      if (myEffect == 4 && digitalRead(BUTTON_OFF) < 1) {
+        changeLedAnimation(4); // start new candle
+      } else if (myEffect > 3) {
         changeAnimationButtonSpeed();
       } else if (myEffect == 2) {
         if (myWhiteLedValue + 50 > 1023) { myWhiteLedValue = 23; }
@@ -216,15 +260,28 @@ void loop() {
         newHue = myHue + 10;
         if (newHue > 255) { newHue = 0; }
         changeHue(newHue);
+        updateNeeded = 1;
       } else if (myEffect == 1) {
         //change intensity
         newValue = myValue + 25;
         if (newValue > 255) { newValue = 5; }
         changeRGBIntensity(newValue);
+        updateNeeded = 1;
+      } else if (myEffect == 3 && digitalRead(BUTTON_OFF) < 1) {
+        //change cool
+        newCool = FireCooling + 2;
+        if (newCool > 30) { newCool = 0; }
+        changeCooling(newCool);
+      } else if (myEffect == 3) {
+        //change spark
+        newSpark = FireSparking + 10;
+        if (newSpark > 100) { newSpark = 0; }
+        changeSparking(newSpark);
       }
       lastChangeButtonTime = millis();      
   }
-  */ 
+  
+  
 }
 
 
@@ -242,9 +299,12 @@ void changeLedAnimation(int animation){
   if(animation==41){
     startindex = random(0,NUM_LEDS-1); //Update flickerled position, hacky I know ;(
   }
+  if(animation==0) { 
+    writeWhiteLedPWMIfChanged(0); 
+  }
   disableSleepTimer();
   if(animation>maxMode){animation=1;}
-  if (myEffect != animation) {  // only do stuff when there was a change
+  if (myEffect != animation || animation == 4) {  // only do stuff when there was a change, except for changing the candle animation
     myEffect = animation;
     Serial.print("\nNew Mode: ");  
     Serial.print(animation);
@@ -298,6 +358,7 @@ void changeHue(int hue){
     EEPROM.write(1, myHue);
     lastChangeTime = millis();
     eepromCommitted = false;
+    updateNeeded = 1;
     ledAnimationsSetSolidColor(CHSV(myHue,mySaturation,myValue));
   }
 }
@@ -311,6 +372,7 @@ void changeSaturation(int saturation){
     EEPROM.write(2, mySaturation);
     lastChangeTime = millis();
     eepromCommitted = false;
+    updateNeeded = 1;
     ledAnimationsSetSolidColor(CHSV(myHue,mySaturation,myValue));
   }
 }
@@ -325,6 +387,7 @@ void changeWhiteIntensity(int value){
     EEPROM.write(5, myWhiteLedValue/256);
     lastChangeTime = millis();
     eepromCommitted = false;
+    updateNeeded = 1;
   }
 }
 
@@ -337,6 +400,7 @@ void changeRGBIntensity(int value){
     EEPROM.write(3, myValue);
     lastChangeTime = millis();
     eepromCommitted = false;
+    updateNeeded = 1;
     ledAnimationsSetSolidColor(CHSV(myHue,mySaturation,myValue));
   }
 }
@@ -368,7 +432,25 @@ void putOnStrip(void){
   uint8_t pwmTemp=oldPWMValue/4;
   for(int i=0;i<strip.numPixels();i++)
   {
-    strip.setPixelColor(i,leds[i].r,leds[i].g,leds[i].b);  
+    strip.setPixelColor(i,leds[i].r,leds[i].g,leds[i].b, pwmTemp
+    );  
   }
   strip.show();
+}
+
+
+
+
+
+
+void changeCooling(int cool) {
+  FireCooling = cool;
+  Serial.print("\nCool: ");  
+  Serial.print(cool);
+}
+
+void changeSparking(int spark) {
+  FireSparking = spark;
+  Serial.print("\nSpark: "); 
+  Serial.print(spark);
 }
