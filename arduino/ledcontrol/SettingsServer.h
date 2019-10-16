@@ -13,7 +13,7 @@
 
 
 extern void startSettingsServer(void);
-extern void setupWiFi(void);
+extern int setupWiFi(int timeout);
 extern void settingsServerTask(void);
 extern const char* pvhostname;
 extern bool updateStats;

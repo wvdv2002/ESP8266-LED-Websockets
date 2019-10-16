@@ -32,6 +32,8 @@
  V: <input id="V" type="range" min="0" max="255" step="1" oninput="ledValue(this.value);" /><br/>
  W: <input id="W" type="range" min="0" max="1023" step="1" oninput="whiteLedValue(this.value);" /><br/> <br />
  Spd: <input id="SPD" type="range" min="0" max="100" step="1" oninput="animationSpeedSet(this.value);" /><br/> <br />
+ FireCooling: <input id="COOL" type="range" min="0" max="25" step="1" oninput="selectFireCooling(this.value);" /><br/> <br />
+ FireSparking: <input id="Spark" type="range" min="0" max="100" step="1" oninput="selectFireSparking(this.value);" /><br/> <br />
  <button onclick="sleepTime(document.getElementById('sleepMinutes').value);">Sleep</button>: <input type="text" size="4" id="sleepMinutes" value="60"/><br /><br />
  <input id="Sleep" oninput="document.getElementById('sleepMinutes').value=this.value;" type="range" min="1" max="120" step="1" value="60"/><br/><br />
 	
